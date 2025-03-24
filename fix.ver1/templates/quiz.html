@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>クイズ</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .level-select {
+      display: flex;
+      justify-content: space-around;
+      margin: 30px 0;
+    }
+    .level-button {
+      background-color: white;
+      padding: 15px 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .quiz-container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+    .quiz-option {
+      padding: 10px;
+      margin: 10px 0;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .quiz-option:hover {
+      background-color: #e0e0e0;
+    }
+    .result {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .correct {
+      color: green;
+    }
+    .incorrect {
+      color: red;
+    }
+    .button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .back-button {
+      background-color: #6c757d;
+    }
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <div>ようこそ {{ username }} さん</div>
+      <button class="button back-button" @click="backToMain">戻る</button>
+    </div>
+
+    <div class="container">
+      <!-- Level Selection -->
+      <div v-if="currentState === 'select'">
+        <h1>クイズのレベルを選択</h1>
+        <div class="level-select">
+          <div class="level-button" @click="selectLevel('easy')">簡単</div>
+          <div class="level-button" @click="selectLevel('medium')">中級</div>
+          <div class="level-button" @click="selectLevel('hard')">難しい</div>
+        </div>
+      </div>
+
+      <!-- Quiz Question -->
+      <div v-if="currentState === 'question'" class="quiz-container">
+        <h1>{{ currentQuestion.question }}</h1>
+        <div 
+          v-for="(option, index) in currentQuestion.options" 
+          :key="index"
+          class="quiz-option"
+          @click="selectOption(index)"
+        >
+          {{ option }}
+        </div>
+      </div>
+
+      <!-- Quiz Result -->
+      <div v-if="currentState === 'result'" class="quiz-container">
+        <div class="result" :class="correct ? 'correct' : 'incorrect'">
+          {{ correct ? '正解です！' : '不正解です' }}
+        </div>
+        <div v-if="!correct">
+          正解は: {{ currentQuestion.options[currentQuestion.answer] }}
+        </div>
+        <div class="buttons-container">
+          <button class="button" @click="nextQuestion">次の問題</button>
+          <button class="button back-button" @click="backToMain">メインに戻る</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        username: '',
+        currentState: 'select', // select, question, result
+        level: '',
+        questionIndex: 0,
+        correct: false,
+        questions: {
+          easy: [
+            {
+              question: '富士山の高さは？',
+              options: ['3,333m', '3,776m', '4,000m', '2,500m'],
+              answer: 1
+            },
+            {
+              question: '日本の首都は？',
+              options: ['大阪', '京都', '東京', '名古屋'],
+              answer: 2
+            }
+          ],
+          medium: [
+            {
+              question: '日本で一番長い川は？',
+              options: ['信濃川', '利根川', '石狩川', '最上川'],
+              answer: 0
+            },
+            {
+              question: '日本の国鳥は？',
+              options: ['コウノトリ', 'トキ', 'キジ', 'ツル'],
+              answer: 2
+            }
+          ],
+          hard: [
+            {
+              question: '日本の県で最も人口が少ないのは？',
+              options: ['島根県', '鳥取県', '高知県', '徳島県'],
+              answer: 1
+            },
+            {
+              question: '徳川家康が江戸幕府を開いたのは何年？',
+              options: ['1600年', '1603年', '1615年', '1590年'],
+              answer: 1
+            }
+          ]
+        },
+        currentQuestion: null
+      },
+      methods: {
+        backToMain() {
+          window.location.href = 'main.html';
+        },
+        selectLevel(level) {
+          this.level = level;
+          this.questionIndex = 0;
+          this.currentQuestion = this.questions[level][0];
+          this.currentState = 'question';
+        },
+        selectOption(index) {
+          this.correct = (index === this.currentQuestion.answer);
+          this.currentState = 'result';
+        },
+        nextQuestion() {
+          this.questionIndex++;
+          if (this.questionIndex < this.questions[this.level].length) {
+            this.currentQuestion = this.questions[this.level][this.questionIndex];
+            this.currentState = 'question';
+          } else {
+            // Quiz finished
+            this.currentState = 'select';
+          }
+        }
+      },
+      created() {
+        const user = localStorage.getItem('currentUser');
+        if (!user) {
+          window.location.href = 'index.html';
+        } else {
+          this.username = user;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
