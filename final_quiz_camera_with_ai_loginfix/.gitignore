@@ -1,0 +1,9 @@
+# 1) Python virtual environment
+venv/
+ENV/
+.venv/
+__pycache__/
+*.pyc
+
+# 2) Node.js modules (Vue / JavaScript)
+node_modules/

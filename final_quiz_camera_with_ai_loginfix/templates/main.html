@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>メインページ</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+    .fuji-image {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    .main-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 30%;
+      background-color: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+    .button-icon {
+      font-size: 50px;
+      margin-bottom: 10px;
+    }
+    .button-text {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .logout {
+      background: none;
+      border: 1px solid white;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <div>ようこそ {{ username }} さん</div>
+      <button class="logout" @click="logout">ログアウト</button>
+    </div>
+
+    <div class="container">
+      <h1>日本の旅</h1>
+      <img src="/static/mtfuji.jpg" alt="富士山" class="fuji-image">
+      
+      <div class="buttons">
+        <div class="main-button" @click="goTo('quiz.html')">
+          <div class="button-icon">❓</div>
+          <div class="button-text">クイズ</div>
+        </div>
+        
+        <div class="main-button" @click="goTo('camera.html')">
+          <div class="button-icon">📷</div>
+          <div class="button-text">カメラ</div>
+        </div>
+        
+        <div class="main-button" @click="goTo('menu.html')">
+          <div class="button-icon">☰</div>
+          <div class="button-text">メニュー</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        username: ''
+      },
+      methods: {
+        logout() {
+          localStorage.removeItem('currentUser');
+          window.location.href = 'index.html';
+        },
+        goTo(page) {
+          window.location.href = page;
+        }
+      },
+      created() {
+        const user = localStorage.getItem('currentUser');
+        if (!user) {
+          window.location.href = 'index.html';
+        } else {
+          this.username = user;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
