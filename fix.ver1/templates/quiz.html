@@ -4,7 +4,16 @@
   <meta charset="UTF-8" />
   <title>クイズ</title>
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <script>
+    // Change Vue delimiters to avoid conflict with Jinja2
+    Vue.config.delimiters = ['[[', ']]'];
+  </script>
   <style>
+    /* Added this so elements with v-cloak are hidden until Vue is ready */
+    [v-cloak] {
+      display: none;
+    }
+
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -31,12 +40,17 @@
     }
     .level-button {
       background-color: white;
-      padding: 15px 30px;
+      padding: 20px 40px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       cursor: pointer;
       font-size: 18px;
       font-weight: bold;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    .level-button:hover {
+      transform: translateY(-5px);
+      background-color: #f8f9fa;
     }
     .quiz-container {
       background-color: white;
@@ -45,12 +59,22 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       margin-top: 20px;
     }
+    .question-number {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 10px;
+    }
+    .question-text {
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
     .quiz-option {
-      padding: 10px;
+      padding: 15px;
       margin: 10px 0;
       background-color: #f0f0f0;
       border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.2s;
     }
     .quiz-option:hover {
       background-color: #e0e0e0;
@@ -67,68 +91,201 @@
     .incorrect {
       color: red;
     }
+    .answer-explanation {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+    }
     .button {
       background-color: #007bff;
       color: white;
       border: none;
       border-radius: 5px;
-      padding: 10px 20px;
+      padding: 12px 24px;
       margin: 10px;
       cursor: pointer;
       font-size: 16px;
+      transition: background-color 0.2s;
     }
-    .back-button {
+    .button:hover {
+      background-color: #0069d9;
+    }
+    .exit-button {
       background-color: #6c757d;
+    }
+    .exit-button:hover {
+      background-color: #5a6268;
+    }
+    .ranking-button {
+      background-color: #28a745;
+    }
+    .ranking-button:hover {
+      background-color: #218838;
     }
     .buttons-container {
       display: flex;
       justify-content: center;
       margin-top: 20px;
     }
+    .loading {
+      text-align: center;
+      margin: 50px 0;
+      font-size: 18px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .progress {
+      height: 10px;
+      background-color: #007bff;
+      border-radius: 5px;
+      transition: width 0.3s;
+    }
+    .final-result {
+      text-align: center;
+      padding: 30px;
+    }
+    .score {
+      font-size: 36px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+    .score-details {
+      font-size: 18px;
+      margin: 15px 0;
+    }
+    .ranking-container {
+      margin-top: 30px;
+    }
+    .ranking-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .ranking-table th,
+    .ranking-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .ranking-table th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    .current-user {
+      background-color: #e8f4fd;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <div id="app">
+  <div id="app" v-cloak>
     <div class="header">
-      <div>ようこそ {{ username }} さん</div>
-      <button class="button back-button" @click="backToMain">戻る</button>
+      <div>ようこそ [[ username ]] さん</div>
+      <button class="button exit-button" @click="backToMain">戻る</button>
     </div>
 
     <div class="container">
+      <!-- Loading Message -->
+      <div v-if="loading" class="loading">
+        読み込み中...
+      </div>
+
       <!-- Level Selection -->
-      <div v-if="currentState === 'select'">
+      <div v-else-if="currentState === 'select'">
         <h1>クイズのレベルを選択</h1>
         <div class="level-select">
-          <div class="level-button" @click="selectLevel('easy')">簡単</div>
-          <div class="level-button" @click="selectLevel('medium')">中級</div>
-          <div class="level-button" @click="selectLevel('hard')">難しい</div>
+          <div class="level-button" @click="selectLevel(1)">レベル 1</div>
+          <div class="level-button" @click="selectLevel(2)">レベル 2</div>
+          <div class="level-button" @click="selectLevel(3)">レベル 3</div>
         </div>
       </div>
 
       <!-- Quiz Question -->
-      <div v-if="currentState === 'question'" class="quiz-container">
-        <h1>{{ currentQuestion.question }}</h1>
+      <div v-else-if="currentState === 'question'" class="quiz-container">
+        <div class="progress-bar">
+          <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
+        </div>
+        <div class="question-number">質問 [[ questionIndex + 1 ]] / [[ maxQuestions ]]</div>
+        <div class="question-text">[[ currentQuestion.question ]]</div>
         <div 
           v-for="(option, index) in currentQuestion.options" 
           :key="index"
           class="quiz-option"
           @click="selectOption(index)"
         >
-          {{ option }}
+          [[ option ]]
         </div>
       </div>
 
       <!-- Quiz Result -->
-      <div v-if="currentState === 'result'" class="quiz-container">
-        <div class="result" :class="correct ? 'correct' : 'incorrect'">
-          {{ correct ? '正解です！' : '不正解です' }}
+      <div v-else-if="currentState === 'result'" class="quiz-container">
+        <div class="progress-bar">
+          <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
         </div>
-        <div v-if="!correct">
-          正解は: {{ currentQuestion.options[currentQuestion.answer] }}
+        <div class="question-number">質問 [[ questionIndex + 1 ]] / [[ maxQuestions ]]</div>
+        <div class="result" :class="correct ? 'correct' : 'incorrect'">
+          [[ correct ? '正解です！' : '不正解です' ]]
+        </div>
+        <div class="answer-explanation">
+          <strong>正解:</strong> [[ currentQuestion.options[currentQuestion.answer] ]]
+          <div v-if="currentQuestion.explanation">
+            <br>
+            <strong>説明:</strong> [[ currentQuestion.explanation ]]
+          </div>
         </div>
         <div class="buttons-container">
-          <button class="button" @click="nextQuestion">次の問題</button>
-          <button class="button back-button" @click="backToMain">メインに戻る</button>
+          <button v-if="questionIndex < maxQuestions - 1" class="button" @click="nextQuestion">次の問題</button>
+          <button v-else class="button" @click="showFinalResult">結果を表示</button>
+          <button class="button exit-button" @click="endQuiz">終了</button>
+        </div>
+      </div>
+
+      <!-- Final Result -->
+      <div v-else-if="currentState === 'final'" class="quiz-container final-result">
+        <h1>クイズ結果</h1>
+        <div class="score">[[ correctAnswers ]] / [[ maxQuestions ]]</div>
+        <div class="score-details">
+          正解率: [[ Math.round((correctAnswers / maxQuestions) * 100) ]]%
+        </div>
+        <div class="buttons-container">
+          <button class="button ranking-button" @click="showRanking">ランキングを見る</button>
+          <button class="button exit-button" @click="backToMain">メインに戻る</button>
+        </div>
+      </div>
+
+      <!-- Ranking -->
+      <div v-else-if="currentState === 'ranking'" class="quiz-container">
+        <h1>ランキング</h1>
+        <div v-if="loadingRanking" class="loading">ランキングを読み込み中...</div>
+        <div v-else>
+          <div class="ranking-container">
+            <table class="ranking-table">
+              <thead>
+                <tr>
+                  <th>順位</th>
+                  <th>ユーザー名</th>
+                  <th>スコア</th>
+                  <th>正解率</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(rank, index) in rankings" :key="index" :class="{ 'current-user': rank.username === username }">
+                  <td>[[ index + 1 ]]</td>
+                  <td>[[ rank.username ]]</td>
+                  <td>[[ rank.score ]] / [[ maxQuestions ]]</td>
+                  <td>[[ rank.percentage ]]%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="buttons-container">
+            <button class="button exit-button" @click="backToMain">メインに戻る</button>
+          </div>
         </div>
       </div>
     </div>
@@ -137,75 +294,153 @@
   <script>
     new Vue({
       el: '#app',
+      delimiters: ['[[', ']]'], // Change Vue delimiters to avoid conflict with Jinja2
       data: {
         username: '',
-        currentState: 'select', // select, question, result
-        level: '',
+        currentState: 'select', // select, question, result, final, ranking
+        level: 0,
         questionIndex: 0,
         correct: false,
-        questions: {
-          easy: [
-            {
-              question: '富士山の高さは？',
-              options: ['3,333m', '3,776m', '4,000m', '2,500m'],
-              answer: 1
-            },
-            {
-              question: '日本の首都は？',
-              options: ['大阪', '京都', '東京', '名古屋'],
-              answer: 2
-            }
-          ],
-          medium: [
-            {
-              question: '日本で一番長い川は？',
-              options: ['信濃川', '利根川', '石狩川', '最上川'],
-              answer: 0
-            },
-            {
-              question: '日本の国鳥は？',
-              options: ['コウノトリ', 'トキ', 'キジ', 'ツル'],
-              answer: 2
-            }
-          ],
-          hard: [
-            {
-              question: '日本の県で最も人口が少ないのは？',
-              options: ['島根県', '鳥取県', '高知県', '徳島県'],
-              answer: 1
-            },
-            {
-              question: '徳川家康が江戸幕府を開いたのは何年？',
-              options: ['1600年', '1603年', '1615年', '1590年'],
-              answer: 1
-            }
-          ]
-        },
-        currentQuestion: null
+        correctAnswers: 0,
+        maxQuestions: 5,
+        loading: false,
+        loadingRanking: false,
+        questions: [],
+        currentQuestion: null,
+        userAnswers: [],
+        rankings: []
+      },
+      computed: {
+        progressPercentage() {
+          return ((this.questionIndex + 1) / this.maxQuestions) * 100;
+        }
       },
       methods: {
         backToMain() {
           window.location.href = 'main.html';
         },
+        loadQuestions(level) {
+          this.loading = true;
+          
+          fetch(`/api/quiz/${level}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.success && data.questions && data.questions.length > 0) {
+                // Get random 5 questions from the loaded questions
+                const shuffled = [...data.questions].sort(() => 0.5 - Math.random());
+                this.questions = shuffled.slice(0, this.maxQuestions);
+                console.log(`Loaded ${this.questions.length} questions for level ${level}`);
+              } else {
+                console.error('Error loading questions from API');
+                this.backToMain();
+                return;
+              }
+              
+              this.currentQuestion = this.questions[0];
+              this.currentState = 'question';
+            })
+            .catch(error => {
+              console.error('Error loading questions:', error);
+              alert('問題の読み込み中にエラーが発生しました。');
+              this.backToMain();
+            })
+            .finally(() => {
+              this.loading = false;
+            });
+        },
         selectLevel(level) {
           this.level = level;
           this.questionIndex = 0;
-          this.currentQuestion = this.questions[level][0];
-          this.currentState = 'question';
+          this.correctAnswers = 0;
+          this.userAnswers = [];
+          this.loadQuestions(level);
         },
         selectOption(index) {
           this.correct = (index === this.currentQuestion.answer);
+          
+          if (this.correct) {
+            this.correctAnswers++;
+          }
+          
+          // Save user answer
+          this.userAnswers.push({
+            question: this.currentQuestion.question,
+            userAnswer: index,
+            correctAnswer: this.currentQuestion.answer,
+            correct: this.correct
+          });
+          
           this.currentState = 'result';
         },
         nextQuestion() {
           this.questionIndex++;
-          if (this.questionIndex < this.questions[this.level].length) {
-            this.currentQuestion = this.questions[this.level][this.questionIndex];
-            this.currentState = 'question';
+          this.currentQuestion = this.questions[this.questionIndex];
+          this.currentState = 'question';
+        },
+        showFinalResult() {
+          // Save results to server
+          fetch('/api/quiz-result', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              username: this.username,
+              level: this.level,
+              score: this.correctAnswers,
+              total: this.maxQuestions,
+              answers: this.userAnswers
+            })
+          }).catch(error => {
+            console.error('Error saving quiz result:', error);
+          });
+          
+          this.currentState = 'final';
+        },
+        endQuiz() {
+          if (this.questionIndex < this.maxQuestions - 1) {
+            if (confirm('クイズを終了してもよろしいですか？')) {
+              this.backToMain();
+            }
           } else {
-            // Quiz finished
-            this.currentState = 'select';
+            this.showFinalResult();
           }
+        },
+        showRanking() {
+          this.loadingRanking = true;
+          this.currentState = 'ranking';
+          
+          // Fetch rankings from server
+          fetch(`/api/quiz-ranking/${this.level}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.success && data.rankings) {
+                this.rankings = data.rankings;
+              } else {
+                // If API fails, create a simple ranking with current user
+                this.rankings = [
+                  {
+                    username: this.username,
+                    score: this.correctAnswers,
+                    percentage: Math.round((this.correctAnswers / this.maxQuestions) * 100)
+                  }
+                ];
+              }
+            })
+            .catch(error => {
+              console.error('Error loading rankings:', error);
+              // If API fails, create a simple ranking with current user
+              this.rankings = [
+                {
+                  username: this.username,
+                  score: this.correctAnswers,
+                  percentage: Math.round((this.correctAnswers / this.maxQuestions) * 100)
+                }
+              ];
+            })
+            .finally(() => {
+              this.loadingRanking = false;
+            });
         }
       },
       created() {
