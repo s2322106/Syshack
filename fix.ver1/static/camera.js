@@ -1,70 +1,110 @@
-import config from './api-config.js';
+import config from '/static/api-config.js';
+console.log("APIキー:", config.apiKey);
 
-export default {
-  data() {
-    return {
-      videoStarted: false,
-      boxes: [],
-      translatedLabel: ''
-    };
+new Vue({
+  el: '#app',
+  data: {
+    stream: null,
+    photo: '',
+    objects: [],
+    jpResult: '',
+    enResult: ''
   },
   methods: {
     startCamera() {
-      const video = this.$refs.video;
-      const canvas = this.$refs.canvas;
-      const ctx = canvas.getContext('2d');
       navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
-          video.srcObject = stream;
-          video.play();
-          this.videoStarted = true;
-          const interval = setInterval(() => {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob(blob => this.detectLabels(blob), 'image/jpeg');
-          }, 5000);
-        });
-    },
-    async detectLabels(blob) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64data = reader.result.split(',')[1];
-        const res = await fetch('https://vision.googleapis.com/v1/images:annotate?key=' + config.visionKey, {
-          method: 'POST',
-          body: JSON.stringify({
-            requests: [{
-              image: { content: base64data },
-              features: [{ type: 'OBJECT_LOCALIZATION', maxResults: 10 }]
-            }]
-          }),
-          headers: { 'Content-Type': 'application/json' }
-        });
-        const result = await res.json();
-        const annotations = result.responses[0].localizedObjectAnnotations || [];
-        this.boxes = annotations.map(obj => {
-          const v = obj.boundingPoly.normalizedVertices;
-          return {
-            label: obj.name,
-            left: v[0].x * 640,
-            top: v[0].y * 480,
-            width: (v[1].x - v[0].x) * 640,
-            height: (v[2].y - v[1].y) * 480
-          };
-        });
-      };
-      reader.readAsDataURL(blob);
-    },
-    async translateLabel(label) {
-      const res = await fetch("https://api-free.deepl.com/v2/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          auth_key: config.deeplKey,
-          text: label,
-          target_lang: "JA"
+          this.stream = stream;
+          this.$refs.video.srcObject = stream;
         })
-      });
-      const data = await res.json();
-      this.translatedLabel = label + ' / ' + (data.translations?.[0]?.text || '翻訳失敗');
+        .catch(error => console.error("カメラ起動エラー:", error));
+    },
+    stopCamera() {
+      if (this.stream) {
+        this.stream.getTracks().forEach(track => track.stop());
+        this.stream = null;
+      }
+    },
+    capturePhoto() {
+      const canvas = this.$refs.canvas;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(this.$refs.video, 0, 0, canvas.width, canvas.height);
+      this.photo = canvas.toDataURL('image/png');
+      this.stopCamera();
+      this.mockDetectObjects();
+    },
+    retakePhoto() {
+      this.photo = '';
+      this.objects = [];
+      this.jpResult = '';
+      this.enResult = '';
+      this.startCamera();
+    },
+    mockDetectObjects() {
+      this.objects = [
+        {
+          name: "Bottle",
+          boundingPoly: {
+            normalizedVertices: [
+              { x: 0.2, y: 0.2 },
+              { x: 0.8, y: 0.2 },
+              { x: 0.8, y: 0.8 },
+              { x: 0.2, y: 0.8 }
+            ]
+          }
+        }
+      ];
+      this.drawBoundingBoxes(this.objects);
+    },
+    drawBoundingBoxes(objects) {
+      const canvas = this.$refs.canvas;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 2;
+
+        objects.forEach(obj => {
+          const v = obj.boundingPoly.normalizedVertices;
+          const x1 = v[0].x * canvas.width;
+          const y1 = v[0].y * canvas.height;
+          const x2 = v[2].x * canvas.width;
+          const y2 = v[2].y * canvas.height;
+          ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+        });
+
+        ctx.setLineDash([]);
+      };
+      img.src = this.photo;
+    },
+    translateLabels() {
+      const dict = { "Bottle": "ボトル", "Chair": "椅子" };
+      const first = this.objects[0];
+      const en = first.name;
+      const jp = dict[en] || en + "（翻訳）";
+
+      const params = new URLSearchParams({ en, jp });
+      window.location.href = `/camera?${params.toString()}`;
+    },
+    loadTranslationFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      this.jpResult = params.get('jp') || '';
+      this.enResult = params.get('en') || '';
+    },
+    goToMain() {
+      window.location.href = "/main.html";
     }
+  },
+  mounted() {
+    this.startCamera();
+    this.loadTranslationFromURL();
+  },
+  beforeDestroy() {
+    this.stopCamera();
   }
-};
+});
+
