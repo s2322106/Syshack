@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"/>
+  <title>ランキング</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .button-area {
+      margin-bottom: 20px;
+    }
+    .button-area button {
+      margin-right: 10px;
+      padding: 8px 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>ランキング</h1>
+  
+  <!-- レベル切り替え用ボタン -->
+  <div class="button-area">
+    <button onclick="location.href='/ranking/1'">Lv1</button>
+    <button onclick="location.href='/ranking/2'">Lv2</button>
+    <button onclick="location.href='/ranking/3'">Lv3</button>
+  </div>
+  
+  <!-- ここはrankingの一覧を表示するなら、 Flask側でrender_templateするときに
+       ranking変数を渡すなどの実装を追加。 -->
+  <p>ここにランキング概要などを表示するのもOK</p>
+  
+</body>
+</html>

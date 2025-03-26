@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>メニュー</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .menu-options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .menu-option {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .menu-option:hover {
+      background-color: #f8f9fa;
+    }
+    .option-icon {
+      font-size: 30px;
+      margin-right: 20px;
+    }
+    .option-details {
+      text-align: left;
+    }
+    .option-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .option-desc {
+      color: #6c757d;
+    }
+    .button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <div>ようこそ {{ username }} さん</div>
+      <button class="button" @click="backToMain">戻る</button>
+    </div>
+
+    <div class="container">
+      <h1>メニュー</h1>
+
+      <div class="menu-option" @click="goToRanking">
+        <div class="option-icon">🏆</div>
+        <div class="option-details">
+          <div class="option-title">ランキング</div>
+          <div class="option-desc">他のユーザーとのスコアを比較</div>
+        </div>
+      </div>
+      
+      <div class="menu-option" @click="notImplemented('camera-history')">
+        <div class="option-icon">🖼️</div>
+        <div class="option-details">
+          <div class="option-title">カメラ履歴</div>
+          <div class="option-desc">撮影した写真と翻訳</div>
+        </div>
+      </div>
+      
+      <div class="menu-option" @click="notImplemented('quiz-history')">
+        <div class="option-icon">📝</div>
+        <div class="option-details">
+          <div class="option-title">クイズ履歴</div>
+          <div class="option-desc">過去の回答と結果</div>
+        </div>
+      </div>
+      
+      <div class="menu-option" @click="notImplemented('profile')">
+        <div class="option-icon">👤</div>
+        <div class="option-details">
+          <div class="option-title">プロフィール</div>
+          <div class="option-desc">ユーザー情報の確認と編集</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        username: ''
+      },
+      methods: {
+        backToMain() {
+          window.location.href = 'main.html';
+        },
+        notImplemented(feature) {
+          alert(`${feature} 機能は開発中です。`);
+        },
+        goToRanking() {
+          window.location.href = 'ranking.html';
+        }
+      },
+      created() {
+        const user = localStorage.getItem('currentUser');
+        if (!user) {
+          window.location.href = 'index.html';
+        } else {
+          this.username = user;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

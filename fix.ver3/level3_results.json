@@ -1,0 +1,41 @@
+[
+  {
+    "username": "admin",
+    "level": 3,
+    "score": 5,
+    "total": 5,
+    "answers": [
+      {
+        "question": "奥の細道で有名な俳人は？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "日本の迷信「夜、爪を切ってはいけない」と言われる理由は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "神社で参拝するときに鳴らす鈴にはどのような意味がある？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "日本刀を抜くときに使う動作の名前は？",
+        "userAnswer": 2,
+        "correctAnswer": 2,
+        "correct": true
+      },
+      {
+        "question": "世阿弥はどの伝統芸能の発展に貢献しましたか？",
+        "userAnswer": 2,
+        "correctAnswer": 2,
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-26T12:15:28.461525"
+  }
+]

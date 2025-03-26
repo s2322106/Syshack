@@ -1,0 +1,158 @@
+[
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 4,
+    "total": 5,
+    "answers": [
+      {
+        "question": "お祭りでよく見る食べ物は？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "「節分」に豆をまく理由は？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "お昼にする挨拶は？",
+        "userAnswer": 2,
+        "correctAnswer": 2,
+        "correct": true
+      },
+      {
+        "question": "日本で一番高い山は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "日本の食事でよく使う道具は？",
+        "userAnswer": 3,
+        "correctAnswer": 2,
+        "correct": false
+      }
+    ],
+    "timestamp": "__timestamp__"
+  },
+  {
+    "username": "aaa",
+    "level": 2,
+    "score": 4,
+    "total": 5,
+    "answers": [
+      {
+        "question": "江戸時代の庶民文化として人気があった演劇の名前は何ですか？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "日本の多くの学校や仕事は、何月から始まりますか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "神社で買う「お守り」は何のために持つものですか？",
+        "userAnswer": 3,
+        "correctAnswer": 3,
+        "correct": true
+      },
+      {
+        "question": "短歌の基本の音数は何ですか？",
+        "userAnswer": 1,
+        "correctAnswer": 3,
+        "correct": false
+      },
+      {
+        "question": "年が明けて初めて神社に参拝することを何と言いますか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      }
+    ],
+    "timestamp": "__timestamp__"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 5,
+    "total": 5,
+    "answers": [
+      {
+        "question": "雨が多い季節（5月〜7月）は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "お正月に食べる料理は？",
+        "userAnswer": 2,
+        "correctAnswer": 2,
+        "correct": true
+      },
+      {
+        "question": "日本人が旅行でよく行く場所は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "日本の伝統的な服は？",
+        "userAnswer": 2,
+        "correctAnswer": 2,
+        "correct": true
+      },
+      {
+        "question": "「桜餅」はどの季節の和菓子？",
+        "userAnswer": 3,
+        "correctAnswer": 3,
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-26T11:46:13.944912"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 2,
+    "total": 5,
+    "answers": [
+      {
+        "question": "「盆踊り」はいつ？",
+        "userAnswer": 0,
+        "correctAnswer": 1,
+        "correct": false
+      },
+      {
+        "question": "「お花見」とは何をする？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "お寺の鐘の音は何の意味？",
+        "userAnswer": 3,
+        "correctAnswer": 1,
+        "correct": false
+      },
+      {
+        "question": "日本一高い東京のタワーは？",
+        "userAnswer": 0,
+        "correctAnswer": 2,
+        "correct": false
+      },
+      {
+        "question": "日本の国旗のデザインは？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-26T12:13:01.316121"
+  }
+]
