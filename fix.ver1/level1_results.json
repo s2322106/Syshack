@@ -1,0 +1,106 @@
+[
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 1,
+    "total": 5,
+    "answers": [
+      {
+        "question": "食事の前に言う言葉は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:46:58.779307"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 2,
+    "total": 5,
+    "answers": [
+      {
+        "question": "「盆踊り」はいつ？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:47:04.246117"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 2,
+    "total": 5,
+    "answers": [
+      {
+        "question": "お寺の鐘の音は何の意味？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-27T14:47:07.594120"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 1,
+    "total": 5,
+    "answers": [
+      {
+        "question": "日本の伝統的な紙は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:57:47.162680"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 2,
+    "total": 5,
+    "answers": [
+      {
+        "question": "ひな祭り（3月3日）に飾るものは？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:57:50.583208"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 3,
+    "total": 5,
+    "answers": [
+      {
+        "question": "食事の後に言う言葉は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:57:52.774410"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 4,
+    "total": 5,
+    "answers": [
+      {
+        "question": "「七夕」は何月何日？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:57:54.895001"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 5,
+    "total": 5,
+    "answers": [
+      {
+        "question": "花火大会が多い季節は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:57:56.996577"
+  }
+]

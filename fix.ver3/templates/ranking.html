@@ -125,15 +125,17 @@
     <div class="container">
       <h2>クイズのレベルを選択</h2>
       <div class="level-buttons">
+        <!-- レベルボタンを押したら /ranking/<level> に移動するだけに変更 -->
         <button
           v-for="level in [1, 2, 3]"
           :key="level"
-          :class="['level-button', { 'button-active': selectedLevel === level } ]"
-          @click="selectLevel(level)">
+          :class="['level-button', { 'button-active': selectedLevel === level }]"
+          @click="redirectToLevel(level)">
           レベル {{ level }}
         </button>
       </div>  
 
+      <!-- 下部固定のボタン群 -->
       <div class="buttons">
         <div class="main-button" onclick="location.href='main.html'">
           <div class="button-icon">🏠</div>
@@ -153,16 +155,8 @@
         </div>
       </div>    
 
-
-      {% raw %}
-      <div class="ranking-list" v-if="showRanking && rankingData[selectedLevel]">
-        <ol>
-          <li v-for="(r, index) in rankingData[selectedLevel]" :key="index">
-            {{ index + 1 }}位: {{ r.username }} - {{ r.score }} / {{ r.total }} ({{ r.percentage }}%)
-          </li>
-        </ol>
-      </div>
-      {% endraw %}
+    </div>
+  </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -170,27 +164,12 @@
         el: "#app",
         data: {
           username: localStorage.getItem("currentUser") || "ゲスト",
-          selectedLevel: null,
-          showRanking: false,
-          rankingData: {
-            1: [
-              { username: "ユーザーA", score: 8, total: 10, percentage: 80 },
-              { username: "ユーザーB", score: 7, total: 10, percentage: 70 }
-            ],
-            2: [
-              { username: "ユーザーC", score: 9, total: 10, percentage: 90 },
-              { username: "ユーザーD", score: 6, total: 10, percentage: 60 }
-            ],
-            3: [
-              { username: "ユーザーE", score: 10, total: 10, percentage: 100 },
-              { username: "ユーザーF", score: 5, total: 10, percentage: 50 }
-            ]
-          }
+          selectedLevel: null
         },
         methods: {
-          selectLevel(level) {
-            this.selectedLevel = level;
-            this.showRanking = true;
+          redirectToLevel(level) {
+            // 単純に /ranking/<level> に遷移
+            window.location.href = "/ranking/" + level;
           },
           goToMain() {
             window.location.href = "/main.html";
