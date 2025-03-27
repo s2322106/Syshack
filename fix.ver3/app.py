@@ -526,6 +526,11 @@ def show_level3_ranking():
 
     return render_template("level3.html", results=best_list)
 
+#カメラ履歴を表示
+#def menuは上で定義済みだったので、名前を変更した
+@app.route("/camera_history.html")
+def camera_history():
+    return render_template("camera_history.html")
 
 ################################
 # API: 퀴즈 히스토리
