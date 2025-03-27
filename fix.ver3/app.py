@@ -328,28 +328,46 @@ def get_quiz_ranking(level):
 def show_ranking():
     return render_template('ranking.html')
 
-# (2) レベル1ボタン用のルート
+
+# (1) レベル1ボタン用のルート
 #     /ranking/1 でアクセス
 #     level1_results.json読み込み
 #---------------------------------
 @app.route('/ranking/1')
 def show_level1_ranking():
-    """
-    'level1_results.json' を読み込み、
-    level1.html に表示用データを渡す
-    """
-    # JSONファイルパス(同階層にある想定)
+    import os
+    import json
+
+    # JSONファイルパス
     json_path = os.path.join(app.root_path, 'level1_results.json')
 
-    try:
-        # JSONを読み込む (Lv1データだけ入っている想定)
-        with open(json_path, 'r', encoding='utf-8') as f:
-            level1_data = json.load(f)
-    except:
-        level1_data = []  
+    # JSON読込
+    with open(json_path, 'r', encoding='utf-8') as f:
+        all_data = json.load(f)  # リスト [ {...}, {...} ]
+
+    # 1) ユーザー名をキーに、最高スコアが入ったレコードを保存していく
+    user_best = {}
+    for record in all_data:
+        uname = record["username"]
+        current_score = record["score"]
+
+        if uname not in user_best:
+            # 初めて出てきたユーザーならそのまま登録
+            user_best[uname] = record
+        else:
+            # 既に登録があるユーザーなら、scoreが大きい方を優先
+            if current_score > user_best[uname]['score']:
+                user_best[uname] = record
+
+    # 2) 最終的にユーザーごとの最高スコアレコードだけが user_best に残っている
+    best_list = list(user_best.values())
+
+    # 3) 必要に応じてソート (ここではscore降順)
+    best_list.sort(key=lambda x: x["score"], reverse=True)
 
     # テンプレートへ渡す
-    return render_template('level1.html', results=level1_data)
+    return render_template("level1.html", results=best_list)
+
 
 # (2) レベル2ボタン用のルート
 #     /ranking/2 でアクセス
@@ -357,42 +375,65 @@ def show_level1_ranking():
 #---------------------------------
 @app.route('/ranking/2')
 def show_level2_ranking():
-    """
-    'level2_results.json' を読み込み、
-    level2.html に表示用データを渡す
-    """
-    # JSONファイルパス(同階層にある想定)
+    import os
+    import json
+
+    # JSONファイルパス
     json_path = os.path.join(app.root_path, 'level2_results.json')
 
-    try:
-        # JSONを読み込む
-        with open(json_path, 'r', encoding='utf-8') as f:
-            level2_data = json.load(f)
-    except:
-        level2_data = []  
+    # JSON読込
+    with open(json_path, 'r', encoding='utf-8') as f:
+        all_data = json.load(f)  # リスト [ {...}, {...} ]
 
-    # テンプレートへ渡す
-    return render_template('level2.html', results=level2_data)
+    # 1) ユーザー名をキーに、最高スコアが入ったレコードを保存していく
+    user_best = {}
+    for record in all_data:
+        uname = record["username"]
+        current_score = record["score"]
+
+        if uname not in user_best:
+            user_best[uname] = record
+        else:
+            if current_score > user_best[uname]['score']:
+                user_best[uname] = record
+
+    best_list = list(user_best.values())
+    best_list.sort(key=lambda x: x["score"], reverse=True)
+
+    return render_template("level2.html", results=best_list)
 
 
+# (3) レベル3ボタン用のルート
+#     /ranking/3 でアクセス
+#     level3_results.json読み込み
+#---------------------------------
 @app.route('/ranking/3')
 def show_level3_ranking():
-    """
-    'level3_results.json' を読み込み、
-    level3.html に表示用データを渡す
-    """
-    # JSONファイルパス(同階層にある想定)
+    import os
+    import json
+
+    # JSONファイルパス
     json_path = os.path.join(app.root_path, 'level3_results.json')
 
-    try:
-        # JSONを読み込む
-        with open(json_path, 'r', encoding='utf-8') as f:
-            level3_data = json.load(f)
-    except:
-        level3_data = []  
+    # JSON読込
+    with open(json_path, 'r', encoding='utf-8') as f:
+        all_data = json.load(f)  # リスト [ {...}, {...} ]
 
-    # テンプレートへ渡す
-    return render_template('level3.html', results=level3_data)
+    user_best = {}
+    for record in all_data:
+        uname = record["username"]
+        current_score = record["score"]
+
+        if uname not in user_best:
+            user_best[uname] = record
+        else:
+            if current_score > user_best[uname]['score']:
+                user_best[uname] = record
+
+    best_list = list(user_best.values())
+    best_list.sort(key=lambda x: x["score"], reverse=True)
+
+    return render_template("level3.html", results=best_list)
 
 
 ################################
