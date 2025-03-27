@@ -9,8 +9,12 @@ from datetime import datetime
 from google.cloud import vision
 import requests
 
-# 환경 변수 하드코딩 (주의: 실제 서비스에서는 보안상 위험함)
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "vision_key.json"  # 서비스 계정 키 경로
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(BASE_DIR, "vision_key.json")
+
+
+  # 서비스 계정 키 경로
 DEEPL_API_KEY = "a6da533c-6070-4fb0-a6f4-7e2f57af830b:fx"
 GOOGLE_VISION_PUBLIC_KEY = "3b47c284013af32f47fc63afa13e68bd97a9159c	"
 
