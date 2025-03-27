@@ -153,6 +153,8 @@
         </div>
       </div>    
 
+
+      {% raw %}
       <div class="ranking-list" v-if="showRanking && rankingData[selectedLevel]">
         <ol>
           <li v-for="(r, index) in rankingData[selectedLevel]" :key="index">
@@ -160,8 +162,7 @@
           </li>
         </ol>
       </div>
-    </div>
-  </div>
+      {% endraw %}
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
