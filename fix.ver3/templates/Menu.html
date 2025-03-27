@@ -86,7 +86,7 @@
         </div>
       </div>
       
-      <div class="menu-option" @click="notImplemented('camera-history')">
+      <div class="menu-option" @click="goToCameraHistory">
         <div class="option-icon">🖼️</div>
         <div class="option-details">
           <div class="option-title">カメラ履歴</div>
@@ -94,13 +94,13 @@
         </div>
       </div>
       
-      <div class="menu-option" @click="notImplemented('quiz-history')">
+      <div class="menu-option" @click="goToQuizHistory">
         <div class="option-icon">📝</div>
         <div class="option-details">
           <div class="option-title">クイズ履歴</div>
           <div class="option-desc">過去の回答と結果</div>
         </div>
-      </div>
+      </div>      
       
       <div class="menu-option" @click="notImplemented('profile')">
         <div class="option-icon">👤</div>
@@ -127,6 +127,12 @@
         },
         goToRanking() {
           window.location.href = 'ranking.html';
+        },
+        goToCameraHistory() {
+          window.location.href = 'camera_history.html';
+        },
+        goToQuizHistory() {
+          window.location.href = 'quiz_history.html';
         }
       },
       created() {
