@@ -105,7 +105,7 @@
   <div id="app">
     <div class="header d-flex justify-content-between align-items-center">
       <div class="fs-5">ようこそ <span class="fw-bold">{{ username }}</span> さん</div>
-      <button class="btn btn-secondary btn-back" @click="goToMain">戻る</button>
+      <button class="btn btn-secondary btn-back" @click="backToMenu">戻る</button>
     </div>
 
     <div class="container level-content">
@@ -195,8 +195,8 @@
             // クリックしたら /ranking/<level> に移動
             window.location.href = "/ranking/" + level;
           },
-          goToMain() {
-            window.location.href = "/main.html";
+          backToMenu() {
+            window.location.href = "/menu.html";
           }
         }
       });
