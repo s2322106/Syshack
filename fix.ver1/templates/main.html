@@ -2,124 +2,150 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>メインページ</title>
-  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
+    html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
       background-color: #f4f4f4;
     }
     .header {
       background-color: #007bff;
       color: white;
-      padding: 10px 20px;
+      padding: 10px 15px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      text-align: center;
-    }
-    .fuji-image {
-      width: 100%;
-      max-height: 400px;
-      object-fit: cover;
-      border-radius: 10px;
-      margin: 20px 0;
-    }
-    .buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 30px;
-    }
-    .main-button {
+    .content {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      width: 30%;
-      background-color: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
+      padding: 10px;
     }
-    .button-icon {
-      font-size: 50px;
+    .title {
+      text-align: center;
+      margin: 10px 0;
+    }
+    .image-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 10px;
     }
-    .button-text {
-      font-size: 18px;
-      font-weight: bold;
+    .main-image {
+      width: 100%;
+      height: 100%;
+      max-height: calc(100vh - 160px);
+      object-fit: cover;
+      border-radius: 10px;
     }
-    .logout {
+    .logout-btn {
       background: none;
       border: 1px solid white;
       color: white;
-      padding: 5px 10px;
       border-radius: 5px;
+      padding: 6px 12px;
       cursor: pointer;
+    }
+    /* Bottom Navigation */
+    .bottom-nav {
+      display: flex;
+      background-color: white;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      color: #666;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .nav-item.active {
+      color: #007bff;
+      border-top: 3px solid #007bff;
+    }
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div class="header">
-      <div>ようこそ {{ username }} さん</div>
-      <button class="logout" @click="logout">ログアウト</button>
-    </div>
+  <div class="header">
+    <div>ようこそ <span id="username"></span> さん</div>
+    <button class="logout-btn" onclick="logout()">ログアウト</button>
+  </div>
 
-    <div class="container">
-      <h1>日本の旅</h1>
-      <img src="/static/mtfuji.jpg" alt="富士山" class="fuji-image">
-      
-      <div class="buttons">
-        <div class="main-button" @click="goTo('quiz.html')">
-          <div class="button-icon">❓</div>
-          <div class="button-text">クイズ</div>
-        </div>
-        
-        <div class="main-button" @click="goTo('camera.html')">
-          <div class="button-icon">📷</div>
-          <div class="button-text">カメラ</div>
-        </div>
-        
-        <div class="main-button" @click="goTo('menu.html')">
-          <div class="button-icon">☰</div>
-          <div class="button-text">メニュー</div>
-        </div>
-      </div>
+  <div class="content">
+    <h1 class="title">日本の旅</h1>
+    <div class="image-container">
+      <img src="/static/mtfuji.jpg" alt="富士山" class="main-image">
     </div>
   </div>
 
+  <div class="bottom-nav">
+    <a href="main.html" class="nav-item active">
+      <div class="nav-icon">🏠</div>
+      <div>ホーム</div>
+    </a>
+    <a href="quiz.html" class="nav-item">
+      <div class="nav-icon">❓</div>
+      <div>クイズ</div>
+    </a>
+    <a href="camera.html" class="nav-item">
+      <div class="nav-icon">📷</div>
+      <div>カメラ</div>
+    </a>
+    <a href="menu.html" class="nav-item">
+      <div class="nav-icon">☰</div>
+      <div>メニュー</div>
+    </a>
+  </div>
+
   <script>
-    new Vue({
-      el: '#app',
-      data: {
-        username: ''
-      },
-      methods: {
-        logout() {
-          localStorage.removeItem('currentUser');
-          window.location.href = 'index.html';
-        },
-        goTo(page) {
-          window.location.href = page;
-        }
-      },
-      created() {
-        const user = localStorage.getItem('currentUser');
-        if (!user) {
-          window.location.href = 'index.html';
-        } else {
-          this.username = user;
-        }
+    // Check if user is logged in
+    document.addEventListener('DOMContentLoaded', function() {
+      const user = localStorage.getItem('currentUser');
+      if (!user) {
+        window.location.href = 'index.html';
+      } else {
+        document.getElementById('username').textContent = user;
       }
+      
+      // Set active navigation based on current page
+      const currentPage = window.location.pathname.split('/').pop() || 'main.html';
+      document.querySelectorAll('.nav-item').forEach(item => {
+        const href = item.getAttribute('href');
+        if (href === currentPage) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
     });
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'index.html';
+    }
   </script>
 </body>
 </html>
