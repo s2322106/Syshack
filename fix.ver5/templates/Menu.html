@@ -67,13 +67,60 @@
       background-color: rgba(255, 255, 255, 0.3);
       border: 1px solid white;
     }
+    /* Bottom Navigation */
+    .bottom-nav {
+      display: flex;
+      background-color: white;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      color: #666;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .nav-item.active {
+      color: #007bff;
+      border-top: 3px solid #007bff;
+    }
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
   </style>
 </head>
 <body>
   <div id="app">
     <div class="header d-flex justify-content-between align-items-center">
       <div class="fs-5">ようこそ <span class="fw-bold">{{ username }}</span> さん</div>
-      <button class="btn btn-outline-light" @click="backToMain">戻る</button>
+    </div>
+
+    <div class="bottom-nav">
+      <a href="main.html" class="nav-item">
+        <div class="nav-icon">🏠</div>
+        <div>ホーム</div>
+      </a>
+      <a href="quiz.html" class="nav-item">
+        <div class="nav-icon">❓</div>
+        <div>クイズ</div>
+      </a>
+      <a href="camera.html" class="nav-item">
+        <div class="nav-icon">📷</div>
+        <div>カメラ</div>
+      </a>
+      <a href="menu.html" class="nav-item active">
+        <div class="nav-icon">☰</div>
+        <div>メニュー</div>
+      </a>
     </div>
     
     <div class="container py-4">

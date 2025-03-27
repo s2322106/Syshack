@@ -19,6 +19,23 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: relative;
+    }
+    .btn-back {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      padding: 5px 10px;
+      font-size: 12px;
+      background-color: #555;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-back:hover {
+      background-color: #333;
     }
     .container {
       max-width: 600px;
@@ -113,6 +130,7 @@
   <div id="profile-app">
     <div class="header">
       <div>ようこそ <span id="username"></span> さん</div>
+      <a href="menu.html" class="btn-back">戻る</a>
     </div>
 
     <div class="content">
@@ -188,27 +206,6 @@
         newPassword: '',
         message: '',
         messageType: 'success'
-      },
-      created() {
-        // Get current user from localStorage
-        const currentUser = localStorage.getItem('currentUser');
-        if (currentUser) {
-          this.profile.username = currentUser;
-          
-          // Fetch user profile data
-          fetch(`/api/user-profile?username=${currentUser}`)
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                this.profile.email = data.user.email || '';
-              }
-            })
-            .catch(error => {
-              console.error('Error fetching user profile:', error);
-              this.message = 'プロフィールの読み込みに失敗しました';
-              this.messageType = 'error';
-            });
-        }
       },
       methods: {
         saveProfile() {
