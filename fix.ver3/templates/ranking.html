@@ -88,6 +88,7 @@
       padding: 8px 0;
       font-size: 16px;
     }
+
     .buttons {
       position: fixed;
       bottom: 0;
@@ -99,6 +100,7 @@
       border-top: 1px solid #ddd;
       padding: 10px 0;
     }
+
     .main-button {
       display: flex;
       flex-direction: column;
@@ -108,11 +110,11 @@
       text-decoration: none;
       font-size: 12px;
     }
+
     .button-icon {
       font-size: 20px;
       margin-bottom: 2px;
     }
-
   </style>
 </head>
 <body>
@@ -125,13 +127,27 @@
     <div class="container">
       <h2>クイズのレベルを選択</h2>
       <div class="level-buttons">
-        <!-- レベルボタンを押したら /ranking/<level> に移動するだけに変更 -->
+
+        <!-- 手動で3つのボタンを作成 -->
         <button
-          v-for="level in [1, 2, 3]"
-          :key="level"
-          :class="['level-button', { 'button-active': selectedLevel === level }]"
-          @click="redirectToLevel(level)">
-          レベル {{ level }}
+          class="level-button"
+          :class="{ 'button-active': selectedLevel === 1 }"
+          @click="redirectToLevel(1)">
+          レベル1
+        </button>
+
+        <button
+          class="level-button"
+          :class="{ 'button-active': selectedLevel === 2 }"
+          @click="redirectToLevel(2)">
+          レベル2
+        </button>
+
+        <button
+          class="level-button"
+          :class="{ 'button-active': selectedLevel === 3 }"
+          @click="redirectToLevel(3)">
+          レベル3
         </button>
       </div>  
 
@@ -168,7 +184,7 @@
         },
         methods: {
           redirectToLevel(level) {
-            // 単純に /ranking/<level> に遷移
+            // クリックしたら /ranking/<level> に移動
             window.location.href = "/ranking/" + level;
           },
           goToMain() {
