@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クイズ</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      background-color: #f4f4f4;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      margin-bottom: 60px; /* Space for bottom nav */
+    }
+    .title {
+      text-align: center;
+      margin: 10px 0;
+    }
+    .quiz-container {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .level-select {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+    .level-button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .level-button:hover {
+      background-color: #0069d9;
+    }
+    .question-text {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    .option {
+      background-color: #f8f9fa;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .option:hover {
+      background-color: #e9ecef;
+    }
+    .result {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .correct {
+      color: #28a745;
+    }
+    .incorrect {
+      color: #dc3545;
+    }
+    .button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .logout-btn {
+      background: none;
+      border: 1px solid white;
+      color: white;
+      border-radius: 5px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .progress-bar {
+      height: 8px;
+      background-color: #e9ecef;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .progress {
+      height: 100%;
+      background-color: #007bff;
+      border-radius: 4px;
+    }
+    /* Bottom Navigation */
+    .bottom-nav {
+      display: flex;
+      background-color: white;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      color: #666;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .nav-item.active {
+      color: #007bff;
+      border-top: 3px solid #007bff;
+    }
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    /* Loading spinner */
+    .loading {
+      text-align: center;
+      padding: 40px 0;
+    }
+    .spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top-color: #007bff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .score-display {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    .current-score {
+      font-weight: bold;
+      color: #007bff;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>ようこそ <span id="username"></span> さん</div>
+    <button class="logout-btn" onclick="logout()">ログアウト</button>
+  </div>
+
+  <div class="content" id="quiz-app">
+    <h1 class="title">クイズ</h1>
+    
+    <!-- Loading state -->
+    <div id="loading" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p>読み込み中...</p>
+    </div>
+    
+    <!-- Level selection -->
+    <div id="level-select" class="quiz-container">
+      <h2>レベルを選択してください</h2>
+      <div class="level-select">
+        <button class="level-button" onclick="selectLevel(1)">レベル 1</button>
+        <button class="level-button" onclick="selectLevel(2)">レベル 2</button>
+        <button class="level-button" onclick="selectLevel(3)">レベル 3</button>
+      </div>
+      <p style="text-align: center; margin-top: 20px;">
+        連続モード: 間違えるまで挑戦できます！
+      </p>
+    </div>
+    
+    <!-- Question display -->
+    <div id="question-container" class="quiz-container" style="display: none;">
+      <div class="score-display">
+        <div class="current-score">スコア: <span id="current-score">0</span></div>
+      </div>
+      <div class="question-text" id="question-text"></div>
+      <div id="options-container"></div>
+    </div>
+    
+    <!-- Correct Result display -->
+    <div id="correct-result-container" class="quiz-container" style="display: none;">
+      <div class="result correct">正解です！</div>
+      <div class="buttons-container">
+        <button class="button" onclick="nextQuestion()">次の問題</button>
+        <button class="button" onclick="window.location.href='main.html'">終了する</button>
+      </div>
+    </div>
+    
+    <!-- Final score (shown when wrong answer or all questions answered) -->
+    <div id="final-container" class="quiz-container" style="display: none;">
+      <h2>クイズ終了</h2>
+      <div id="final-message" class="result incorrect">残念！不正解です</div>
+      <div id="correct-answer" style="text-align: center; margin: 15px 0;"></div>
+      <div class="result">
+        最終スコア: <span id="final-score">0</span>
+      </div>
+      <div class="buttons-container">
+        <button class="button" onclick="window.location.href='quiz.html'">もう一度</button>
+        <button class="button" onclick="window.location.href='main.html'">終了する</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="main.html" class="nav-item">
+      <div class="nav-icon">🏠</div>
+      <div>ホーム</div>
+    </a>
+    <a href="quiz.html" class="nav-item active">
+      <div class="nav-icon">❓</div>
+      <div>クイズ</div>
+    </a>
+    <a href="camera.html" class="nav-item">
+      <div class="nav-icon">📷</div>
+      <div>カメラ</div>
+    </a>
+    <a href="menu.html" class="nav-item">
+      <div class="nav-icon">☰</div>
+      <div>メニュー</div>
+    </a>
+  </div>
+
+  <script>
+    // Global variables
+    let currentLevel = 0;
+    let allQuestions = [];
+    let availableQuestions = [];
+    let score = 0;
+    
+    // Check if user is logged in
+    document.addEventListener('DOMContentLoaded', function() {
+      const user = localStorage.getItem('currentUser');
+      if (!user) {
+        window.location.href = 'index.html';
+      } else {
+        document.getElementById('username').textContent = user;
+      }
+    });
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'index.html';
+    }
+    
+    // Select quiz level
+    function selectLevel(level) {
+      currentLevel = level;
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('level-select').style.display = 'none';
+      
+      // Reset score
+      score = 0;
+      updateScoreDisplay();
+      
+      // Fetch quiz questions for the selected level
+      fetch(`/api/quiz/${level}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.questions && data.questions.length > 0) {
+            // Store all questions
+            allQuestions = data.questions;
+            console.log(`Loaded ${allQuestions.length} questions for level ${level}`);
+            
+            // Shuffle all questions
+            availableQuestions = JSON.parse(JSON.stringify(allQuestions));
+            shuffleArray(availableQuestions);
+            
+            // Show the first question
+            showNextQuestion();
+          } else {
+            alert('クイズデータの読み込みに失敗しました。');
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('level-select').style.display = 'block';
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching questions:', error);
+          alert('エラーが発生しました。もう一度お試しください。');
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('level-select').style.display = 'block';
+        });
+    }
+    
+    // Shuffle array using Fisher-Yates algorithm
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+    
+    // Show next question
+    function showNextQuestion() {
+      // Check if we have any questions left
+      if (availableQuestions.length === 0) {
+        // All questions answered correctly!
+        showFinalResult(true);
+        return;
+      }
+      
+      // Get the next question
+      const currentQuestion = availableQuestions.pop();
+      
+      // Display the question
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('question-container').style.display = 'block';
+      document.getElementById('question-text').textContent = currentQuestion.question;
+      
+      // Update score display
+      updateScoreDisplay();
+      
+      // Create option buttons
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+      
+      currentQuestion.options.forEach((option, index) => {
+        const optionElement = document.createElement('div');
+        optionElement.className = 'option';
+        optionElement.textContent = option;
+        optionElement.onclick = () => selectOption(index, currentQuestion);
+        optionsContainer.appendChild(optionElement);
+      });
+    }
+    
+    // Update score display
+    function updateScoreDisplay() {
+      document.getElementById('current-score').textContent = score;
+    }
+    
+    // Handle option selection
+    function selectOption(index, question) {
+      const isCorrect = index === question.answer;
+      
+      if (isCorrect) {
+        // Correct answer
+        score++;
+        updateScoreDisplay();
+        
+        // Show correct result container
+        document.getElementById('question-container').style.display = 'none';
+        document.getElementById('correct-result-container').style.display = 'block';
+        
+        // Save result
+        saveResult(true, question);
+      } else {
+        // Wrong answer - game over
+        document.getElementById('question-container').style.display = 'none';
+        document.getElementById('final-container').style.display = 'block';
+        document.getElementById('final-score').textContent = score;
+        document.getElementById('correct-answer').textContent = 
+          `正解: ${question.options[question.answer]}`;
+        document.getElementById('final-message').textContent = '残念！不正解です';
+        document.getElementById('final-message').className = 'result incorrect';
+        
+        // Save result
+        saveResult(false, question);
+      }
+    }
+    
+    // Move to next question
+    function nextQuestion() {
+      document.getElementById('correct-result-container').style.display = 'none';
+      showNextQuestion();
+    }
+    
+    // Show final result
+    function showFinalResult(allCorrect) {
+      document.getElementById('question-container').style.display = 'none';
+      document.getElementById('correct-result-container').style.display = 'none';
+      document.getElementById('final-container').style.display = 'block';
+      document.getElementById('final-score').textContent = score;
+      
+      if (allCorrect) {
+        document.getElementById('correct-answer').textContent = '';
+        document.getElementById('final-message').textContent = 'おめでとう！全問正解です！';
+        document.getElementById('final-message').className = 'result correct';
+      }
+    }
+    
+    // Save result to server
+    function saveResult(isCorrect, question) {
+      const username = localStorage.getItem('currentUser');
+      
+      fetch('/api/quiz-result', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: username,
+          level: currentLevel,
+          score: score,
+          total: allQuestions.length,
+          answers: [{
+            question: question.question,
+            correct: isCorrect
+          }]
+        })
+      }).catch(error => {
+        console.error('Error saving result:', error);
+      });
+    }
+  </script>
+</body>
+</html>

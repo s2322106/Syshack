@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"/>
+  <title>レベル1結果</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>レベル1の結果</h1>
+
+  <!-- resultsがリスト形式 [ {...}, {...}, ... ] を想定 -->
+  {% if results and results|length > 0 %}
+    <ol>
+      {% for record in results %}
+        <li>
+          ユーザー名: {{ record.username }}<br>
+          スコア: {{ record.score }} / {{ record.total }}
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p>レベル1の結果データがありません</p>
+  {% endif %}
+
+  <!-- 戻るボタンなど -->
+  <button onclick="location.href='/ranking.html'">ランキング画面に戻る</button>
+</body>
+</html>

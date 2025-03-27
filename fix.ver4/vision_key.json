@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "glassy-sky-455010-e2",
+  "private_key_id": "fcea0b6cbdaf1753a274bc9a33f0d83f50b01c8e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDW0L7cAeLR9YjX\n8N+OIyMOIoZQHFkx9bBkDT+LAIJ62yE/3H4uHAh8jjg/er/UWqh6GwJmMsxilphZ\nsUKBE/CM7FKMgOSERv1EQ7FUhKx6uanBRwUqPmFk3pgPdRLKi5twIp7+I6CxLV//\n8iZepVJXI1FjMIM7GpEx0Ut8uym4rYa89Mqt8S7QY24xeMlzk1K4EdPED7txRw7I\nf8jEgkntwPoBHJYlzQFvyeQZxHHauiWuxjQMeEn4TskXF18dxoukiu+Kew4aMU3a\nZAct3zYUhNJsQLYyaAB68QKMWVbTGm2Vyy3dAgNovcHBLzQ3xJmbY25RmE0EKgz9\ndEIyiBJBAgMBAAECgf8i0AS33G/8KeTZzTKgv+QxqW0Ue1BsXq5A7wsZ/vGMvdZo\nzKLmQt5dN4i5QOG1pSHu9Lf+0Y/hELOMu/buVDAeDNTHHSkeoFW+Q/oim4QYORGs\n11Joj8alqJOcB0anhguhFvtAbfJ5kPdUOaBePKYlDDEBK7hL68V7/VJU2tmrQ9r9\na3sqHXDR+oQjq2JmWqwLgQp8tfT8uACL68Yiw7EOTOigHN+OKpRCPapvqP+8c5C4\nmQY1z7b6chg0Z/uygLalRq8ywq8hxf8FfCxYHHNBQNDCORvHgtwsCfExdm25N712\nSoys0Jde55BEq/T9+D3gCPnwuUPZZ0Zc3CyOUAECgYEA93kzBrAsoy+F6jGNomDR\n+hU2ZR/vO/Nk6i4LAY63/yaSGZfnfu/LuTJ2yinO5D2eJK4QgRz2HBUaLYOzs2Ye\nXREjh969A/PWvIOQ5/WPUsdR/ZVOmX88s9o+VKaYQc/oKkn5/xSX2NfQmOHG6BhS\noZZOE1EGm8jn/mDJKuL1tkECgYEA3jd9wouPStoOHYkR9TRNDQ1yPAUSHFAjxVQL\n6Bp66J5aNkDP5uRPR+434HYpobDaR1y5bhXG+x8Sh11khEgiStDddnvgFhMtvC3U\nT90pbwrYJzhbSmyMoLpQBHkL15/L00V0FyhHM64H3f3PpvnfIhaolz1ZRqX4teNW\nQCtTXAECgYEA8A2tJYu3gQQUTryKuzxX8tKo1SdJFUpgVZkcLAKZEPQFPLZRZJyP\nbbI58JjljBkJUmNWtye0xEDkB8p9gkRIp9Z8NMwnZbIeVvb4lUlqIc4fBnDSsaru\n4zeMxuhjQVO/zWW9D2aWdU3DlslL/M+7N+tpCOvMEUmtYN/Zw7QszQECgYB1fO1W\n4KbAMo3n+8Ks3Bwo3IUbSqsKoSxodkldTDLTrnWP3bCOKQPpyf9tA8x7GqAtvs6j\nb4wm1YTcYPp2HhVTbR7KODCAO1+g8LIiD5KKjTc/dUJ/FOk9SYRo+P7T4D7J0xzP\n6ZHLtyWdr0YMyGu7ADPe0qbS/YmD0VCW2NFYAQKBgQDbWKFkzakNUPyW+oKPMz+6\n8mbyDtyERwL38PlrfVS6vVN6yWOYKyCZGvG+2PlLQnKwb1iht6W3rXWmrqTIKiZG\n3OC3z+K6PmNAo1YRrKObXCupFHyRWnCzDG4hIPEBmQK0ow/bV9w4uF326XPdMlda\nIlKkzfgPx6fs6RkE3Q5Jhg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "syshack@glassy-sky-455010-e2.iam.gserviceaccount.com",
+  "client_id": "109884941216369156778",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/syshack%40glassy-sky-455010-e2.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
