@@ -94,14 +94,6 @@
       cursor: pointer;
       margin: 5px;
     }
-    .logout-btn {
-      background: none;
-      border: 1px solid white;
-      color: white;
-      border-radius: 5px;
-      padding: 6px 12px;
-      cursor: pointer;
-    }
     .buttons-container {
       display: flex;
       justify-content: center;
@@ -180,7 +172,6 @@
 <body>
   <div class="header">
     <div>ようこそ <span id="username"></span> さん</div>
-    <button class="logout-btn" onclick="logout()">ログアウト</button>
   </div>
 
   <div class="content" id="quiz-app">
@@ -273,12 +264,6 @@
         document.getElementById('username').textContent = user;
       }
     });
-    
-    // Logout function
-    function logout() {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'index.html';
-    }
     
     // Select quiz level
     function selectLevel(level) {
