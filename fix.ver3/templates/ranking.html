@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>クイズランキング</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    }
+
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .level-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    .level-button {
+      background-color: white;
+      border: none;
+      padding: 20px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: 0.2s;
+      min-width: 120px;
+    }
+
+    .level-button:hover {
+      background-color: #f0f0f0;
+      transform: translateY(-2px);
+    }
+
+    .button-active {
+      border: 2px solid #007bff;
+    }
+
+    .back-button {
+      background-color: #555;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .ranking-list {
+      margin-top: 40px;
+      text-align: left;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .ranking-list ol {
+      padding-left: 20px;
+    }
+
+    .ranking-list li {
+      padding: 8px 0;
+      font-size: 16px;
+    }
+    .buttons {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      background-color: #ffffff;
+      border-top: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .main-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #007bff;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .button-icon {
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <div>ようこそ {{ username }} さん</div>
+      <button class="back-button" @click="goToMain">戻る</button>
+    </div>
+
+    <div class="container">
+      <h2>クイズのレベルを選択</h2>
+      <div class="level-buttons">
+        <button
+          v-for="level in [1, 2, 3]"
+          :key="level"
+          :class="['level-button', { 'button-active': selectedLevel === level } ]"
+          @click="selectLevel(level)">
+          レベル {{ level }}
+        </button>
+      </div>  
+
+      <div class="buttons">
+        <div class="main-button" onclick="location.href='main.html'">
+          <div class="button-icon">🏠</div>
+          <div class="button-text">ホーム</div>
+        </div>
+        <div class="main-button" onclick="location.href='quiz.html'">
+          <div class="button-icon">❓</div>
+          <div class="button-text">クイズ</div>
+        </div>
+        <div class="main-button" onclick="location.href='camera.html'">
+          <div class="button-icon">📷</div>
+          <div class="button-text">カメラ</div>
+        </div>
+        <div class="main-button" onclick="location.href='menu.html'">
+          <div class="button-icon">☰</div>
+          <div class="button-text">メニュー</div>
+        </div>
+      </div>    
+
+
+      {% raw %}
+      <div class="ranking-list" v-if="showRanking && rankingData[selectedLevel]">
+        <ol>
+          <li v-for="(r, index) in rankingData[selectedLevel]" :key="index">
+            {{ index + 1 }}位: {{ r.username }} - {{ r.score }} / {{ r.total }} ({{ r.percentage }}%)
+          </li>
+        </ol>
+      </div>
+      {% endraw %}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      new Vue({
+        el: "#app",
+        data: {
+          username: localStorage.getItem("currentUser") || "ゲスト",
+          selectedLevel: null,
+          showRanking: false,
+          rankingData: {
+            1: [
+              { username: "ユーザーA", score: 8, total: 10, percentage: 80 },
+              { username: "ユーザーB", score: 7, total: 10, percentage: 70 }
+            ],
+            2: [
+              { username: "ユーザーC", score: 9, total: 10, percentage: 90 },
+              { username: "ユーザーD", score: 6, total: 10, percentage: 60 }
+            ],
+            3: [
+              { username: "ユーザーE", score: 10, total: 10, percentage: 100 },
+              { username: "ユーザーF", score: 5, total: 10, percentage: 50 }
+            ]
+          }
+        },
+        methods: {
+          selectLevel(level) {
+            this.selectedLevel = level;
+            this.showRanking = true;
+          },
+          goToMain() {
+            window.location.href = "/main.html";
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

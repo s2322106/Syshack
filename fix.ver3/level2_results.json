@@ -1,0 +1,41 @@
+[
+  {
+    "username": "admin",
+    "level": 2,
+    "score": 4,
+    "total": 5,
+    "answers": [
+      {
+        "question": "たくあんは何の漬物ですか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "俳句の基本の音数は何ですか？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "三味線はどんな楽器ですか？",
+        "userAnswer": 1,
+        "correctAnswer": 0,
+        "correct": false
+      },
+      {
+        "question": "日本で一番長い川は何ですか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "羽子板を使う伝統的な遊びの名前は何ですか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-26T12:14:44.768057"
+  }
+]
