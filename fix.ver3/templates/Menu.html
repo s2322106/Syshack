@@ -74,10 +74,10 @@
       <div>ようこそ {{ username }} さん</div>
       <button class="button" @click="backToMain">戻る</button>
     </div>
-
+    
     <div class="container">
       <h1>メニュー</h1>
-
+      
       <div class="menu-option" @click="goToRanking">
         <div class="option-icon">🏆</div>
         <div class="option-details">
@@ -85,7 +85,7 @@
           <div class="option-desc">他のユーザーとのスコアを比較</div>
         </div>
       </div>
-      
+            
       <div class="menu-option" @click="goToCameraHistory">
         <div class="option-icon">🖼️</div>
         <div class="option-details">
@@ -93,16 +93,16 @@
           <div class="option-desc">撮影した写真と翻訳</div>
         </div>
       </div>
-      
+            
       <div class="menu-option" @click="goToQuizHistory">
         <div class="option-icon">📝</div>
         <div class="option-details">
           <div class="option-title">クイズ履歴</div>
           <div class="option-desc">過去の回答と結果</div>
         </div>
-      </div>      
-      
-      <div class="menu-option" @click="notImplemented('profile')">
+      </div>
+                  
+      <div class="menu-option" @click="goToProfile">
         <div class="option-icon">👤</div>
         <div class="option-details">
           <div class="option-title">プロフィール</div>
@@ -111,7 +111,7 @@
       </div>
     </div>
   </div>
-
+  
   <script>
     new Vue({
       el: '#app',
@@ -133,6 +133,9 @@
         },
         goToQuizHistory() {
           window.location.href = 'quiz_history.html';
+        },
+        goToProfile() {
+          window.location.href = 'profile.html';
         }
       },
       created() {

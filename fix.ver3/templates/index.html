@@ -46,6 +46,21 @@
       display: inline-block;
     }
     .error { color: red; }
+    .success { color: green; }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top-color: #007bff;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -54,29 +69,41 @@
       <h2>ログイン</h2>
       <input type="text" v-model="username" placeholder="ユーザー名">
       <input type="password" v-model="password" placeholder="パスワード">
-      <button @click="login">ログイン</button>
+      <button @click="login" :disabled="isLoading">
+        ログイン
+        <span v-if="isLoading" class="loading"></span>
+      </button>
       <div class="error" v-if="error">{{ error }}</div>
+      <div class="success" v-if="success">{{ success }}</div>
       <div class="toggle-link" @click="page = 'register'">新規登録はこちら</div>
     </div>
-
+    
     <div class="container" v-if="page === 'register'">
       <h2>新規登録</h2>
-      <input type="text" v-model="username" placeholder="ユーザー名">
-      <input type="password" v-model="password" placeholder="パスワード">
-      <button @click="register">登録</button>
+      <input type="text" v-model="username" placeholder="ユーザー名" required>
+      <input type="email" v-model="email" placeholder="メールアドレス" required>
+      <input type="password" v-model="password" placeholder="パスワード" required>
+      <button @click="register" :disabled="isLoading">
+        登録
+        <span v-if="isLoading" class="loading"></span>
+      </button>
       <div class="error" v-if="error">{{ error }}</div>
+      <div class="success" v-if="success">{{ success }}</div>
       <div class="toggle-link" @click="page = 'login'">ログインはこちら</div>
     </div>
   </div>
-
+  
   <script>
     new Vue({
       el: '#app',
       data: {
         page: 'login',
         username: '',
+        email: '',
         password: '',
-        error: ''
+        error: '',
+        success: '',
+        isLoading: false
       },
       methods: {
         login() {
@@ -84,16 +111,83 @@
             this.error = 'ユーザー名とパスワードを入力してください';
             return;
           }
-          localStorage.setItem('currentUser', this.username);
-          window.location.href = 'main.html';
+          
+          this.isLoading = true;
+          this.error = '';
+          
+          fetch('/api/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              username: this.username,
+              password: this.password
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            this.isLoading = false;
+            
+            if (data.success) {
+              localStorage.setItem('currentUser', this.username);
+              window.location.href = 'main.html';
+            } else {
+              this.error = data.message || 'ログインに失敗しました';
+            }
+          })
+          .catch(error => {
+            this.isLoading = false;
+            console.error('Error:', error);
+            this.error = 'ネットワークエラーが発生しました';
+          });
         },
+        
         register() {
           if (!this.username || !this.password) {
-            this.error = 'ユーザー名とパスワードを入力してください';
+            this.error = 'すべての項目を入力してください';
             return;
           }
-          this.error = '登録が完了しました。ログインしてください。';
-          this.page = 'login';
+          
+          this.isLoading = true;
+          this.error = '';
+          
+          fetch('/api/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              username: this.username,
+              email: this.email,
+              password: this.password
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            this.isLoading = false;
+            
+            if (data.success) {
+              this.success = '登録が完了しました。ログインしてください。';
+              this.error = '';
+              
+              // Reset form and switch to login page after delay
+              setTimeout(() => {
+                this.username = '';
+                this.email = '';
+                this.password = '';
+                this.page = 'login';
+                this.success = '';
+              }, 2000);
+            } else {
+              this.error = data.message || '登録に失敗しました';
+            }
+          })
+          .catch(error => {
+            this.isLoading = false;
+            console.error('Error:', error);
+            this.error = 'ネットワークエラーが発生しました';
+          });
         }
       }
     });

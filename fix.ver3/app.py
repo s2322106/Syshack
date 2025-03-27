@@ -126,6 +126,10 @@ def load_quiz_data(level):
 def index():
     return render_template('index.html')
 
+@app.route('/index.html')
+def index_html():
+    return render_template('index.html')
+
 @app.route('/main.html')
 def main():
     return render_template('main.html')
@@ -145,6 +149,13 @@ def menu():
     except:
         return render_template('menu.html')
 
+@app.route('/profile.html')
+def profile():
+    return render_template('profile.html')
+
+@app.route('/logout.html')
+def logout():
+    return redirect('/')
 
 ################################
 # API: 사용자 로그인
@@ -174,17 +185,97 @@ def register_api():
     data = request.get_json()
     users = load_users()
     username = data.get('username')
+    email = data.get('email', '')  # メールアドレスも取得
     password = data.get('password')
 
     if any(user.get('username') == username for user in users):
         return jsonify({'success': False, 'message': 'このユーザー名は既に使用されています'})
 
-    users.append({'username': username, 'password': password})
+    # 新しいユーザーを追加
+    new_user = {
+        'username': username,
+        'email': email,
+        'password': password
+    }
+    users.append(new_user)
 
     if save_users(users):
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'message': 'ユーザー登録中にエラーが発生しました'})
+
+
+################################
+# API: プロフィール関連
+################################
+
+@app.route('/api/user-profile', methods=['GET'])
+def get_user_profile():
+    """ユーザープロフィール情報を取得する"""
+    username = request.args.get('username')
+    
+    if not username:
+        return jsonify({'success': False, 'message': 'ユーザー名が指定されていません'})
+    
+    users = load_users()
+    for user in users:
+        if user.get('username') == username:
+            # パスワードは返さない
+            user_data = {
+                'username': user.get('username'),
+                'email': user.get('email', '')
+            }
+            return jsonify({'success': True, 'user': user_data})
+    
+    return jsonify({'success': False, 'message': 'ユーザーが見つかりません'})
+
+
+@app.route('/api/update-profile', methods=['POST'])
+def update_profile():
+    """ユーザープロフィール情報を更新する"""
+    data = request.get_json()
+    username = data.get('username')
+    email = data.get('email')
+    current_password = data.get('currentPassword')
+    new_password = data.get('newPassword')
+    
+    if not username or not current_password:
+        return jsonify({'success': False, 'message': '必須項目が不足しています'})
+    
+    users = load_users()
+    user_found = False
+    original_username = None
+    
+    for i, user in enumerate(users):
+        if user.get('username') == username or user.get('username') == request.headers.get('X-Current-User'):
+            original_username = user.get('username')
+            # パスワード確認
+            if user.get('password') != current_password:
+                return jsonify({'success': False, 'message': '現在のパスワードが正しくありません'})
+            
+            # プロフィール更新
+            users[i]['username'] = username
+            users[i]['email'] = email
+            
+            # パスワード更新（新しいパスワードが指定されている場合）
+            if new_password:
+                users[i]['password'] = new_password
+            
+            user_found = True
+            break
+    
+    if not user_found:
+        return jsonify({'success': False, 'message': 'ユーザーが見つかりません'})
+    
+    # usersファイルを保存
+    if save_users(users):
+        return jsonify({
+            'success': True, 
+            'message': 'プロフィールが更新されました',
+            'updatedUsername': username if username != original_username else None
+        })
+    else:
+        return jsonify({'success': False, 'message': 'プロフィールの保存に失敗しました'})
 
 
 ################################
@@ -592,7 +683,9 @@ if __name__ == '__main__':
         elif level == 3 and not os.path.exists(LEVEL3_RESULTS_JSON_PATH):
             save_results_by_level(3, [])
     
+    # Create users.json if it doesn't exist
+    if not os.path.exists(USERS_JSON_PATH):
+        save_users([])
+    
     # 적절히 포트 번호나 호스트 설정
-
     app.run(host='0.0.0.0', port=5001, debug=True)
-
