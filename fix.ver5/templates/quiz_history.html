@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>カメラ撮影</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      padding-bottom: 80px;
+    }
+    .menu-options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .menu-option {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      cursor: default;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+    canvas, video {
+      border-radius: 10px;
+      border: 2px solid #007bff;
+    }
+    .center-buttons {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .buttons {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      background-color: #ffffff;
+      border-top: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .main-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #007bff;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .button-icon {
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <div>📸 カメラで撮影</div>
+      <button class="button" @click="goToMain">🔁 戻る</button>
+    </div>
+
+    <div class="container">
+      <div class="menu-options">
+        <div class="menu-option">
+          <video ref="video" v-show="!photo" autoplay playsinline muted width="640" height="480"></video>
+          <canvas ref="canvas" width="640" height="480" v-show="photo"></canvas>
+        </div>
+
+        <div class="center-buttons" v-if="!photo">
+          <button class="button" @click="capturePhoto">📸 撮影する</button>
+        </div>
+        <div class="center-buttons" v-if="photo">
+          <button class="button" @click="translateLabels">🌐 翻訳する</button>
+          <button class="button" @click="retakePhoto">🔄 もう一度撮影</button>
+        </div>
+
+        <div class="menu-option" v-if="jpResult && enResult">
+          <div>
+            <h3>翻訳結果</h3>
+            <p><strong>英語名:</strong> {{ enResult }}</p>
+            <p><strong>日本語訳:</strong> {{ jpResult }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <div class="main-button" onclick="location.href='main.html'">
+        <div class="button-icon">🏠</div>
+        <div class="button-text">ホーム</div>
+      </div>
+      <div class="main-button" onclick="location.href='quiz.html'">
+        <div class="button-icon">❓</div>
+        <div class="button-text">クイズ</div>
+      </div>
+      <div class="main-button" onclick="location.href='camera.html'">
+        <div class="button-icon">📷</div>
+        <div class="button-text">カメラ</div>
+      </div>
+      <div class="main-button" onclick="location.href='menu.html'">
+        <div class="button-icon">☰</div>
+        <div class="button-text">メニュー</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue.js + 外部JS読み込み -->
+  <script type="module" src="{{ url_for('static', filename='camera.js') }}"></script>
+</body>
+</html>
