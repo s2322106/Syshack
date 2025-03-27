@@ -4,176 +4,184 @@
   <meta charset="UTF-8" />
   <title>クイズランキング</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f8f9fa;
+      min-height: 100vh;
     }
-
+    
     .header {
-      background-color: #007bff;
+      background-color: #4285F4;
       color: white;
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 15px 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
-
-    .container {
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 0 20px;
-      text-align: center;
-    }
-
-    h2 {
-      margin-bottom: 30px;
-      font-size: 24px;
-    }
-
-    .level-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      flex-wrap: wrap;
-    }
-
-    .level-button {
-      background-color: white;
-      border: none;
-      padding: 20px 30px;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-      transition: 0.2s;
-      min-width: 120px;
-    }
-
-    .level-button:hover {
-      background-color: #f0f0f0;
-      transform: translateY(-2px);
-    }
-
-    .button-active {
-      border: 2px solid #007bff;
-    }
-
-    .back-button {
+    
+    .btn-back {
       background-color: #555;
-      color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 5px;
+    }
+    
+    .level-card {
+      border-radius: 15px;
+      border: none;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
       cursor: pointer;
+      min-height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
     }
-
-    .ranking-list {
-      margin-top: 40px;
-      text-align: left;
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
+    
+    .level-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
-
-    .ranking-list ol {
-      padding-left: 20px;
+    
+    .level-card.active {
+      border: 2px solid #4285F4;
+      background-color: #f0f7ff;
     }
-
-    .ranking-list li {
-      padding: 8px 0;
-      font-size: 16px;
+    
+    .card-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 0;
     }
-
-    .buttons {
+    
+    .level-content {
+      padding-top: 2rem;
+      padding-bottom: 5rem;
+    }
+    
+    .bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       width: 100%;
-      display: flex;
-      justify-content: space-around;
-      background-color: #ffffff;
-      border-top: 1px solid #ddd;
+      background-color: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
       padding: 10px 0;
     }
-
-    .main-button {
+    
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    
+    .nav-link {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      color: #007bff;
+      color: #6c757d;
       text-decoration: none;
       font-size: 12px;
+      padding: 5px 0;
     }
-
-    .button-icon {
-      font-size: 20px;
-      margin-bottom: 2px;
+    
+    .nav-link:hover {
+      color: #4285F4;
+    }
+    
+    .nav-link.active {
+      color: #4285F4;
+    }
+    
+    .page-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: #212529;
+      margin-bottom: 2rem;
     }
   </style>
 </head>
 <body>
   <div id="app">
-    <div class="header">
-      <div>ようこそ {{ username }} さん</div>
-      <button class="back-button" @click="goToMain">戻る</button>
+    <div class="header d-flex justify-content-between align-items-center">
+      <div class="fs-5">ようこそ <span class="fw-bold">{{ username }}</span> さん</div>
+      <button class="btn btn-secondary btn-back" @click="goToMain">戻る</button>
     </div>
 
-    <div class="container">
-      <h2>クイズのレベルを選択</h2>
-      <div class="level-buttons">
-
-        <!-- 手動で3つのボタンを作成 -->
-        <button
-          class="level-button"
-          :class="{ 'button-active': selectedLevel === 1 }"
-          @click="redirectToLevel(1)">
-          レベル1
-        </button>
-
-        <button
-          class="level-button"
-          :class="{ 'button-active': selectedLevel === 2 }"
-          @click="redirectToLevel(2)">
-          レベル2
-        </button>
-
-        <button
-          class="level-button"
-          :class="{ 'button-active': selectedLevel === 3 }"
-          @click="redirectToLevel(3)">
-          レベル3
-        </button>
-      </div>  
-
-      <!-- 下部固定のボタン群 -->
-      <div class="buttons">
-        <div class="main-button" onclick="location.href='main.html'">
-          <div class="button-icon">🏠</div>
-          <div class="button-text">ホーム</div>
+    <div class="container level-content">
+      <h2 class="text-center page-title">クイズのレベルを選択</h2>
+      
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="row gx-4 gy-3">
+            <div class="col-md-6">
+              <div class="card level-card" 
+                   :class="{ 'active': selectedLevel === 1 }"
+                   @click="redirectToLevel(1)">
+                <div class="card-body text-center">
+                  <h3 class="card-title">レベル1</h3>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="card level-card"
+                   :class="{ 'active': selectedLevel === 2 }"
+                   @click="redirectToLevel(2)">
+                <div class="card-body text-center">
+                  <h3 class="card-title">レベル2</h3>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6 mx-auto">
+              <div class="card level-card"
+                   :class="{ 'active': selectedLevel === 3 }"
+                   @click="redirectToLevel(3)">
+                <div class="card-body text-center">
+                  <h3 class="card-title">レベル3</h3>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="main-button" onclick="location.href='quiz.html'">
-          <div class="button-icon">❓</div>
-          <div class="button-text">クイズ</div>
-        </div>
-        <div class="main-button" onclick="location.href='camera.html'">
-          <div class="button-icon">📷</div>
-          <div class="button-text">カメラ</div>
-        </div>
-        <div class="main-button" onclick="location.href='menu.html'">
-          <div class="button-icon">☰</div>
-          <div class="button-text">メニュー</div>
-        </div>
-      </div>    
+      </div>
+    </div>
 
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+      <div class="container">
+        <div class="row justify-content-around">
+          <div class="col-3 text-center">
+            <a href="main.html" class="nav-link">
+              <div class="nav-icon">🏠</div>
+              <div>ホーム</div>
+            </a>
+          </div>
+          <div class="col-3 text-center">
+            <a href="quiz.html" class="nav-link">
+              <div class="nav-icon">❓</div>
+              <div>クイズ</div>
+            </a>
+          </div>
+          <div class="col-3 text-center">
+            <a href="camera.html" class="nav-link">
+              <div class="nav-icon">📷</div>
+              <div>カメラ</div>
+            </a>
+          </div>
+          <div class="col-3 text-center">
+            <a href="menu.html" class="nav-link">
+              <div class="nav-icon">☰</div>
+              <div>メニュー</div>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       new Vue({
