@@ -77,7 +77,10 @@ def load_results_by_level(level):
     try:
         with open(path, 'r', encoding='utf-8') as f:
             return json.load(f)
-    except:
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading results for level {level}: {e}")
+        # Create empty file if it doesn't exist
+        save_results_by_level(level, [])
         return []
 
 def save_results_by_level(level, data):
@@ -109,8 +112,10 @@ def load_quiz_data(level):
         elif level == 3:
             path = LEVEL3_QUIZ_PATH
         else:
-            return {"quiz": []}
-
+            print(f"Invalid level: {level}, defaulting to level 1")
+            path = LEVEL1_QUIZ_PATH
+            
+        print(f"Loading quiz data from: {path}")
         with open(path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
@@ -187,44 +192,98 @@ def register_api():
 
 
 ################################
-# API: 퀴즈 데이터 불러오기
+# API: 퀴즈 데이터 불러오기 (IMPROVED)
 ################################
 
 @app.route('/api/quiz/<int:level>', methods=['GET'])
 def get_quiz_questions(level):
+    print(f"Received request for quiz level: {level}")
+    
+    if level not in [1, 2, 3]:
+        print(f"Invalid level requested: {level}")
+        return jsonify({'success': False, 'message': '無効なレベルです'})
+        
     quiz_data = load_quiz_data(level)
-    questions = quiz_data.get('quiz', []) if isinstance(quiz_data, dict) else quiz_data
-
+    print(f"Loaded quiz data with structure: {type(quiz_data)}")
+    
+    # Get questions (handle different formats)
+    questions = []
+    if isinstance(quiz_data, dict):
+        if 'quiz' in quiz_data:
+            questions = quiz_data['quiz']
+        else:
+            questions = list(quiz_data.values())[0]  # Try first key
+    elif isinstance(quiz_data, list):
+        questions = quiz_data
+    
+    print(f"Extracted {len(questions)} questions")
+    
     if not questions:
         return jsonify({'success': False, 'message': 'クイズデータが見つかりません'})
-
+    
     # 5問抽出して返す
     if len(questions) > 5:
         random.shuffle(questions)
         questions = questions[:5]
-
-    formatted = []
-    for q in questions:
+    
+    # Format the questions for the frontend
+    formatted_questions = []
+    for idx, q in enumerate(questions):
         try:
+            # Skip if there are missing keys
+            if 'question' not in q:
+                print(f"Question {idx} missing required 'question' key. Available keys: {list(q.keys())}")
+                continue
+                
+            # Handle different answer formats
             if 'choices' in q and 'answer' in q:
-                idx = q['choices'].index(q['answer'])
-                formatted.append({'question': q['question'], 'options': q['choices'], 'answer': idx})
-            elif 'options' in q and isinstance(q['answer'], int):
-                formatted.append({'question': q['question'], 'options': q['options'], 'answer': q['answer']})
-        except:
+                if isinstance(q['answer'], str):
+                    # Answer is the text, find the index
+                    answer_index = q['choices'].index(q['answer'])
+                else:
+                    # Answer is already an index
+                    answer_index = q['answer']
+            elif 'options' in q and 'answer' in q:
+                if isinstance(q['answer'], str):
+                    answer_index = q['options'].index(q['answer'])
+                else:
+                    answer_index = q['answer']
+            elif 'choices' in q and 'correct_answer' in q:
+                answer_index = q['choices'].index(q['correct_answer'])
+            elif 'options' in q and 'correct_answer' in q:
+                answer_index = q['options'].index(q['correct_answer'])
+            else:
+                print(f"Question {idx} has no valid answer field or format is unexpected")
+                continue
+            
+            # Use whichever options key is available ('choices' or 'options')
+            options = q.get('choices', q.get('options', []))
+                
+            formatted_questions.append({
+                'question': q['question'],
+                'options': options,
+                'answer': answer_index
+            })
+        except Exception as e:
+            print(f"Error formatting question {idx}: {e}")
             continue
-
-    return jsonify({'success': True, 'questions': formatted})
+    
+    print(f"Successfully formatted {len(formatted_questions)} questions")
+    return jsonify({'success': True, 'questions': formatted_questions})
 
 
 ################################
-# API: 퀴즈 결과 저장
+# API: 퀴즈 결과 저장 (IMPROVED)
 ################################
 
 @app.route('/api/quiz-result', methods=['POST'])
 def save_quiz_result():
     data = request.get_json()
     level = data.get('level')
+    
+    if level not in [1, 2, 3]:
+        return jsonify({'success': False, 'message': '無効なレベルです'})
+        
     result = {
         'username': data.get('username'),
         'level': level,
@@ -233,6 +292,8 @@ def save_quiz_result():
         'answers': data.get('answers', []),
         'timestamp': datetime.now().isoformat()
     }
+
+    print(f"Saving quiz result for user: {result['username']}, level: {level}, score: {result['score']}/{result['total']}")
 
     # ★ 레벨ごとにファイルを読み込み、結果を追加して保存
     results = load_results_by_level(level)
@@ -245,26 +306,33 @@ def save_quiz_result():
 
 
 ################################
-# API: 퀴즈 랭킹
+# API: 퀴즈 랭킹 (IMPROVED)
 ################################
 
 @app.route('/api/quiz-ranking/<int:level>', methods=['GET'])
 def get_quiz_ranking(level):
+    if level not in [1, 2, 3]:
+        return jsonify({'success': False, 'message': '無効なレベルです'})
+        
     # ★ レベルに応じたファイルをロード
     results = load_results_by_level(level)
+    
+    # Filter by level again to be safe
     level_results = [r for r in results if r.get('level') == level]
 
+    # Group by username (get highest score for each user)
     scores = {}
     for r in level_results:
         name = r.get('username')
         score = r.get('score', 0)
         total = r.get('total', 5)
+        
         if name not in scores or scores[name]['score'] < score:
             scores[name] = {
                 'username': name,
                 'score': score,
                 'total': total,
-                'percentage': round((score / total) * 100) if total else 0
+                'percentage': round((score / total) * 100) if total > 0 else 0
             }
 
     sorted_scores = sorted(scores.values(), key=lambda x: x['score'], reverse=True)
@@ -282,19 +350,44 @@ def show_ranking():
 #---------------------------------
 @app.route('/ranking/1')
 def show_level1_ranking():
-    """
-    'level1_results.json' を読み込み、
-    level1.html に表示用データを渡す
-    """
-    # JSONファイルパス(同階層にある想定)
+    import os
+    import json
+
+    # JSONファイルパス
     json_path = os.path.join(app.root_path, 'level1_results.json')
 
-    # JSONを読み込む (Lv1データだけ入っている想定)
+    # JSON読込
     with open(json_path, 'r', encoding='utf-8') as f:
-        level1_data = json.load(f)  
+        all_data = json.load(f)  # リスト [ {...}, {...} ]
+
+    # 1) ユーザー名をキーに、最高スコアが入ったレコードを保存していく
+    user_best = {}
+    for record in all_data:
+        uname = record["username"]
+        current_score = record["score"]
+
+        if uname not in user_best:
+            # 初めて出てきたユーザーならそのまま登録
+            user_best[uname] = record
+        else:
+            # 既に登録があるユーザーなら、scoreが大きい方を優先
+            if current_score > user_best[uname]['score']:
+                user_best[uname] = record
+    
+    # 2) 最終的にユーザーごとの最高スコアレコードだけが user_best に残っている
+    best_list = list(user_best.values())
+
+    # 3) 必要に応じてソート(ここではscore降順)
+    best_list.sort(key=lambda x: x["score"], reverse=True)
 
     # テンプレートへ渡す
-    return render_template('level1.html', results=level1_data)
+    return render_template("level1.html", results=best_list)
+
+# (2) レベル2ボタン用のルート
+#     /ranking/2 でアクセス
+#     level2_results.json読み込み
+#---------------------------------
+
 
 # (2) レベル1ボタン用のルート
 #     /ranking/1 でアクセス
@@ -302,52 +395,96 @@ def show_level1_ranking():
 #---------------------------------
 @app.route('/ranking/2')
 def show_level2_ranking():
-    """
-    'level2_results.json' を読み込み、
-    level2.html に表示用データを渡す
-    """
-    # JSONファイルパス(同階層にある想定)
+    import os
+    import json
+
+    # JSONファイルパス
     json_path = os.path.join(app.root_path, 'level2_results.json')
 
-    # JSONを読み込む (Lv1データだけ入っている想定)
+    # JSON読込
     with open(json_path, 'r', encoding='utf-8') as f:
-        level1_data = json.load(f)  
+        all_data = json.load(f)  # リスト [ {...}, {...} ]
+
+    # 1) ユーザー名をキーに、最高スコアが入ったレコードを保存していく
+    user_best = {}
+    for record in all_data:
+        uname = record["username"]
+        current_score = record["score"]
+
+        if uname not in user_best:
+            # 初めて出てきたユーザーならそのまま登録
+            user_best[uname] = record
+        else:
+            # 既に登録があるユーザーなら、scoreが大きい方を優先
+            if current_score > user_best[uname]['score']:
+                user_best[uname] = record
+    
+    # 2) 最終的にユーザーごとの最高スコアレコードだけが user_best に残っている
+    best_list = list(user_best.values())
+
+    # 3) 必要に応じてソート(ここではscore降順)
+    best_list.sort(key=lambda x: x["score"], reverse=True)
 
     # テンプレートへ渡す
-    return render_template('level2.html', results=level1_data)
+    return render_template("level2.html", results=best_list)
 
-
+# (3) レベル3ボタン用のルート
+#     /ranking/3 でアクセス
+#     level3_results.json読み込み
+#---------------------------------
 @app.route('/ranking/3')
 def show_level3_ranking():
-    """
-    'level3_results.json' を読み込み、
-    level3.html に表示用データを渡す
-    """
-    # JSONファイルパス(同階層にある想定)
+    import os
+    import json
+
+    # JSONファイルパス
     json_path = os.path.join(app.root_path, 'level3_results.json')
 
-    # JSONを読み込む (Lv1データだけ入っている想定)
+    # JSON読込
     with open(json_path, 'r', encoding='utf-8') as f:
-        level1_data = json.load(f)  
+        all_data = json.load(f)  # リスト [ {...}, {...} ]
+
+    # 1) ユーザー名をキーに、最高スコアが入ったレコードを保存していく
+    user_best = {}
+    for record in all_data:
+        uname = record["username"]
+        current_score = record["score"]
+
+        if uname not in user_best:
+            # 初めて出てきたユーザーならそのまま登録
+            user_best[uname] = record
+        else:
+            # 既に登録があるユーザーなら、scoreが大きい方を優先
+            if current_score > user_best[uname]['score']:
+                user_best[uname] = record
+    
+    # 2) 最終的にユーザーごとの最高スコアレコードだけが user_best に残っている
+    best_list = list(user_best.values())
+
+    # 3) 必要に応じてソート(ここではscore降順)
+    best_list.sort(key=lambda x: x["score"], reverse=True)
 
     # テンプレートへ渡す
-    return render_template('level3.html', results=level1_data)
+    return render_template("level3.html", results=best_list)
 
 
 ################################
-# API: 퀴즈 히스토리
+# API: 퀴즈 히스토리 (IMPROVED)
 ################################
 
 @app.route('/api/quiz-history/<username>', methods=['GET'])
 def get_quiz_history(username):
-    # 全レベルのファイルを合算してユーザー履歴を取得したい場合は、
-    # level1, 2, 3それぞれロードして合体する
+    # 全レベルのファイルを合算してユーザー履歴を取得
     all_results = []
     for lvl in [1, 2, 3]:
         results = load_results_by_level(lvl)
         all_results.extend(results)
 
     user_results = [r for r in all_results if r.get('username') == username]
+    
+    # Sort by timestamp (newest first)
+    user_results.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+    
     return jsonify({'success': True, 'history': user_results})
 
 
@@ -478,5 +615,22 @@ def serve_static(path):
 ################################
 
 if __name__ == '__main__':
-    # 適宜、ポート番号やホスト設定
+    # Check if quiz files exist
+    print(f"Level 1 quiz exists: {os.path.exists(LEVEL1_QUIZ_PATH)}")
+    print(f"Level 2 quiz exists: {os.path.exists(LEVEL2_QUIZ_PATH)}")
+    print(f"Level 3 quiz exists: {os.path.exists(LEVEL3_QUIZ_PATH)}")
+    
+    # Create results files if they don't exist
+    for level in [1, 2, 3]:
+        if level == 1 and not os.path.exists(LEVEL1_RESULTS_JSON_PATH):
+            save_results_by_level(1, [])
+            print("Created empty level1_results.json file")
+        elif level == 2 and not os.path.exists(LEVEL2_RESULTS_JSON_PATH):
+            save_results_by_level(2, [])
+            print("Created empty level2_results.json file")
+        elif level == 3 and not os.path.exists(LEVEL3_RESULTS_JSON_PATH):
+            save_results_by_level(3, [])
+            print("Created empty level3_results.json file")
+    
+    # 적절히 포트 번호나 호스트 설정
     app.run(host='0.0.0.0', port=5000, debug=True)
