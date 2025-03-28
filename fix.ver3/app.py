@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, send_from_directory, request, jsonify, redirect
+from flask import Flask, render_template, send_from_directory, request, jsonify
 import json
 import os
 import random
@@ -8,6 +8,10 @@ import uuid
 from datetime import datetime
 from google.cloud import vision
 import requests
+from flask import request
+from google.cloud import translate
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "vision_key.json"
 
 PHOTO_SAVE_DIR = 'static/photos'
 PHOTO_RESULTS_PATH = 'photo_results.json'
@@ -18,8 +22,8 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(BASE_DIR, "vision_ke
 
 
   # 서비스 계정 키 경로
-DEEPL_API_KEY = "a6da533c-6070-4fb0-a6f4-7e2f57af830b:fx"
-GOOGLE_VISION_PUBLIC_KEY = "3b47c284013af32f47fc63afa13e68bd97a9159c	"
+DEEPL_API_KEY = "a6da533c-6070-4fb0-a6f4-7e2f57af830b"
+GOOGLE_VISION_PUBLIC_KEY = "a6da533c-6070-4fb0-a6f4-7e2f57af830b:fx"
 
 # Flask 앱 생성
 app = Flask(
@@ -47,8 +51,14 @@ LEVEL3_QUIZ_PATH = os.path.join(STATIC_DIR, 'level3_quiz_full_50.json')
 
 os.makedirs(PHOTO_SAVE_DIR, exist_ok=True)
 
-# DeepL 번역 함수 추가
+import requests
+
+# DeepL 번역 함수 (에러 핸들링 포함)
 def translate_to_japanese_deepl(english_name):
+    if not DEEPL_API_KEY or DEEPL_API_KEY.strip() == "":
+        print("❌ DeepL APIキーが設定されていません。")
+        return english_name + "（翻訳エラー）"
+
     try:
         url = "https://api-free.deepl.com/v2/translate"
         params = {
@@ -57,15 +67,20 @@ def translate_to_japanese_deepl(english_name):
             "target_lang": "JA"
         }
         response = requests.post(url, data=params)
+
+        if response.status_code != 200:
+            print(f"❌ DeepL APIエラー: {response.status_code} - {response.text}")
+            return english_name + "（翻訳失敗）"
+
         result = response.json()
         translated_text = result["translations"][0]["text"]
         return translated_text
+
     except Exception as e:
-        print("DeepL翻訳エラー:", e)
-        return english_name + "（翻訳）"
+        print("❌ DeepL翻訳処理中に例外が発生しました:", e)
+        return english_name + "（翻訳エラー）"
 
 # 기존 사전 + DeepL 사용
-
 def translate_to_japanese(english_name):
     dictionary = {
         "Bottle": "ボトル",
@@ -73,41 +88,33 @@ def translate_to_japanese(english_name):
         "Table": "テーブル",
         "Book": "本"
     }
+
     if english_name in dictionary:
         return dictionary[english_name]
     else:
         return translate_to_japanese_deepl(english_name)
 
-# batch_translate_with_deepl
-    
-def batch_translate_with_deepl(texts, target_lang="EN"):
-    """
-    Translate multiple texts at once using DeepL API
-    """
-    if not texts:
-        return []
-        
+# from google.cloud import translate_v2 as translate
+
+
+
+@app.route('/api/google-translate', methods=['POST'])
+def google_translate():
     try:
-        url = "https://api-free.deepl.com/v2/translate"
-        params = []
-        for text in texts:
-            params.append(("text", text))
+        from google.cloud import translate_v2 as translate
+        client = translate.Client()
         
-        params.append(("auth_key", DEEPL_API_KEY))
-        params.append(("target_lang", target_lang))
+        data = request.get_json()
+        text = data.get('text', '')
         
-        response = requests.post(url, data=params)
+        result = client.translate(text, target_language='ja')
+        translated = result['translatedText']
         
-        if response.status_code == 200:
-            result = response.json()
-            if "translations" in result:
-                return [t["text"] for t in result["translations"]]
-        
-        print(f"Batch DeepL translation failed: {response.status_code}")
-        return texts
+        return jsonify({'translated_text': translated})
+    
     except Exception as e:
-        print(f"Error in batch DeepL translation: {e}")
-        return texts
+        print("翻訳エラー:", e)
+        return jsonify({'translated_text': '翻訳失敗'})
 
 
 ################################
@@ -198,9 +205,9 @@ def index():
 
 @app.route('/main.html')
 def main():
-    return redirect('/quiz.html')
+    return render_template('main.html')
 
-@app.route('/quiz')
+@app.route('/quiz.html')
 def quiz():
     return render_template('quiz.html')
 
@@ -265,10 +272,7 @@ def register_api():
 def get_quiz_questions(level):
     if level not in [1, 2, 3]:
         return jsonify({'success': False, 'message': '無効なレベルです'})
-    
-    # Get the language parameter from the request (default to Japanese)
-    language = request.args.get('lang', 'ja')
-    
+        
     quiz_data = load_quiz_data(level)
     
     # Get questions (handle different formats)
@@ -289,64 +293,6 @@ def get_quiz_questions(level):
     
     # Format the questions for the frontend
     formatted_questions = []
-    
-    # If English is requested, translate questions and options
-    if language == 'en':
-        # Create a list for all the texts to translate
-        all_texts = []  
-        # Keep track of which questions these texts belong to
-        questions_map = []
-        
-        for idx, q in enumerate(questions):
-            if 'question' not in q or ('choices' not in q and 'options' not in q):
-                continue
-                
-            # Add the question to the translation list
-            all_texts.append(q['question'])
-            
-            # Determine which options field to use and add all options
-            options_field = 'choices' if 'choices' in q else 'options'
-            options = q.get(options_field, [])
-            
-            for option in options:
-                all_texts.append(option)
-                
-            # Map information about this question
-            questions_map.append({
-                'question_idx': idx,
-                'options_field': options_field,
-                'options_count': len(options)
-            })
-                
-        # Now translate all texts in one batch if there are any
-        if all_texts:
-            try:
-                # Translate all texts at once
-                translated_texts = batch_translate_with_deepl(all_texts, 'EN')
-                
-                # Map the translations back to the questions
-                text_index = 0
-                
-                for q_map in questions_map:
-                    idx = q_map['question_idx']
-                    options_field = q_map['options_field']
-                    options_count = q_map['options_count']
-                    
-                    # Get the translated question
-                    questions[idx]['question_translated'] = translated_texts[text_index]
-                    text_index += 1
-                    
-                    # Get the translated options
-                    translated_options = []
-                    for i in range(options_count):
-                        translated_options.append(translated_texts[text_index])
-                        text_index += 1
-                        
-                    questions[idx]['options_translated'] = translated_options
-            except Exception as e:
-                print(f"Translation error: {e}")
-    
-    # Now format all questions with translations if needed
     for q in questions:
         try:
             # Skip if there are missing keys
@@ -374,26 +320,14 @@ def get_quiz_questions(level):
                 continue
             
             # Use whichever options key is available ('choices' or 'options')
-            options_field = 'choices' if 'choices' in q else 'options'
-            options = q.get(options_field, [])
-            
-            # Use translated content if available and English is requested
-            question_text = q.get('question', '')
-            final_options = options
-            
-            if language == 'en':
-                if 'question_translated' in q:
-                    question_text = q['question_translated']
-                if 'options_translated' in q:
-                    final_options = q['options_translated']
-            
+            options = q.get('choices', q.get('options', []))
+                
             formatted_questions.append({
-                'question': question_text,
-                'options': final_options,
+                'question': q['question'],
+                'options': options,
                 'answer': answer_index
             })
-        except Exception as e:
-            print(f"Error formatting question: {e}")
+        except:
             continue
     
     return jsonify({'success': True, 'questions': formatted_questions})
@@ -423,7 +357,6 @@ def save_quiz_result():
     score = data.get('score', 0)
     total = data.get('total', 50)  # Default to 50 for continuous quiz
     answers = data.get('answers', [])
-    language = data.get('language', 'ja')  # Get language but don't do any translation
     
     if level not in [1, 2, 3]:
         return jsonify({'success': False, 'message': '無効なレベルです'})
@@ -434,7 +367,6 @@ def save_quiz_result():
         'score': score,
         'total': total,
         'answers': answers,
-        'language': language,  # Store language for reference
         'timestamp': datetime.now().isoformat()
     }
 
@@ -677,49 +609,20 @@ def show_level3_ranking():
 # API: 퀴즈 히스토리
 ################################
 
-## 不正解履歴を表示
 @app.route('/api/quiz-history/<username>', methods=['GET'])
 def get_quiz_history(username):
-    """指定したレベルをクエリパラメータから取得し、当該ユーザーの不正解履歴のみ返す。"""
-    # クエリパラメータから level を取得
-    level_str = request.args.get('level')
-    if not level_str:
-        return jsonify({'success': False, 'message': 'レベルが指定されていません'})
+    # 全レベルのファイルを合算してユーザー履歴を取得
+    all_results = []
+    for lvl in [1, 2, 3]:
+        results = load_results_by_level(lvl)
+        all_results.extend(results)
+
+    user_results = [r for r in all_results if r.get('username') == username]
     
-    try:
-        level = int(level_str)
-    except:
-        return jsonify({'success': False, 'message': 'レベル指定が不正です'})
-
-    if level not in [1, 2, 3]:
-        return jsonify({'success': False, 'message': 'レベルは1,2,3のいずれかにしてください'})
-
-    # 指定されたレベルの結果だけ読み込む
-    results = load_results_by_level(level)
-
-    # 指定ユーザーの不正解のみ抽出
-    user_incorrect_results = []
-    for record in results:
-        if record.get('username') == username:
-            wrong_answers = []
-            for ans in record.get('answers', []):
-                if ans.get('correct') == False:
-                    wrong_answers.append(ans)
-            
-            # 不正解がある場合、そのレコードを追加
-            if len(wrong_answers) > 0:
-                # タイムスタンプ順に並べたい場合は最後にソートしてもOK
-                user_incorrect_results.append({
-                    "username": record.get('username'),
-                    "level": record.get('level'),
-                    "timestamp": record.get('timestamp', ''),
-                    "answers": wrong_answers
-                })
-
-    # タイムスタンプで並べ替え (新しい順)
-    user_incorrect_results.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
-
-    return jsonify({'success': True, 'history': user_incorrect_results})
+    # Sort by timestamp (newest first)
+    user_results.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+    
+    return jsonify({'success': True, 'history': user_results})
 
 
 ################################
@@ -800,14 +703,25 @@ def photo_history():
 
 
 def translate_to_japanese(english_name):
-    # 簡易辞書（実際には外部APIを使うかもっとデータを増やすなどで対応）
     dictionary = {
         "Bottle": "ボトル",
         "Chair": "椅子",
         "Table": "テーブル",
         "Book": "本"
     }
-    return dictionary.get(english_name, english_name + "（翻訳）")
+    if english_name in dictionary:
+        return dictionary[english_name]
+
+    # fallback: call Google Translate API
+    try:
+        from google.cloud import translate_v2 as translate
+        client = translate.Client()
+        result = client.translate(english_name, target_language='ja')
+        return result['translatedText']
+    except Exception as e:
+        print("翻訳エラー:", e)
+        return english_name + "（翻訳）"
+
 
 
 def save_photo_result(entry):
