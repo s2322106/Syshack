@@ -40,7 +40,7 @@ new Vue({
       canvas.toBlob(blob => {
         const reader = new FileReader();
         reader.onloadend = () => {
-          this.photo = reader.result;  // base64 URL
+          this.photo = reader.result;
           this.stopCamera();
           this.sendToFlask(this.photo);
         };
@@ -48,10 +48,14 @@ new Vue({
       }, 'image/png');
     },
     sendToFlask(base64data) {
+      const username = localStorage.getItem("username");  // ✅ 로그인한 사용자 이름 가져오기
       fetch('/api/photo-analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64data })
+        body: JSON.stringify({
+          image: base64data,
+          username: username  // ✅ username 포함해서 전송
+        })
       })
         .then(res => res.json())
         .then(data => {
@@ -60,6 +64,7 @@ new Vue({
             this.enResult = data.en;
             this.objects = data.objects;
             this.drawBoundingBoxes(this.objects);
+            this.translateLabels();
           } else {
             alert("物体検出に失敗しました: " + data.message);
           }
@@ -168,18 +173,30 @@ new Vue({
       if (!this.objects.length) return;
 
       const translations = await Promise.all(this.objects.map(async obj => {
-        const res = await fetch("https://api-free.deepl.com/v2/translate", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            auth_key: config.deeplKey,
-            text: obj.name,
-            target_lang: "JA"
-          })
-        });
-        const data = await res.json();
-        const translated = data.translations?.[0]?.text || "翻訳失敗";
-        return { en: obj.name, jp: translated };
+        try {
+          const res = await fetch("https://api-free.deepl.com/v2/translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              auth_key: config.deeplKey,
+              text: obj.name,
+              target_lang: "JA"
+            })
+          });
+
+          const data = await res.json();
+
+          if (!data.translations || !data.translations[0] || !data.translations[0].text) {
+            alert(`「${obj.name}」の翻訳に失敗しました（API応答エラー）`);
+            return { en: obj.name, jp: "翻訳失敗" };
+          }
+
+          return { en: obj.name, jp: data.translations[0].text };
+        } catch (err) {
+          console.error("DeepL通信エラー:", err);
+          alert(`「${obj.name}」の翻訳中に通信エラーが発生しました`);
+          return { en: obj.name, jp: "翻訳失敗" };
+        }
       }));
 
       this.translatedObjects = translations;
