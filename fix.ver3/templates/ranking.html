@@ -95,13 +95,27 @@
       color: #212529;
       margin-bottom: 2rem;
     }
+    .back-icon {
+      font-size: 28px;
+      font-weight: bold;
+      margin-right: 16px;
+      cursor: pointer;
+      background-color: white;
+      color: #007bff;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
   <div id="app">
     <div class="header d-flex justify-content-between align-items-center">
+      <div class="back-icon" onclick="location.href='menu.html'">&#x2039;</div>
       <div class="fs-5">ようこそ <span class="fw-bold">{{ username }}</span> さん</div>
-      <button class="btn btn-secondary btn-back" @click="backToMenu">戻る</button>
     </div>
 
     <div class="container level-content">

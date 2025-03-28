@@ -84,12 +84,27 @@
       box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
       padding: 10px 0;
     }
+
+    .back-icon {
+      font-size: 28px;
+      font-weight: bold;
+      margin-right: 16px;
+      cursor: pointer;
+      background-color: white;
+      color: #007bff;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
   <div class="header d-flex justify-content-between align-items-center">
+    <div class="back-icon" onclick="location.href='/ranking.html'">&#x2039;</div>
     <h1 class="h4 m-0">レベル1の結果</h1>
-    <button class="btn btn-sm btn-light" onclick="location.href='/ranking.html'">戻る</button>
   </div>
 
   <div class="container">
