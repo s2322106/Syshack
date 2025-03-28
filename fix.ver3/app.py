@@ -514,6 +514,24 @@ def camera_history1():
         print("履歴ロードエラー:", e)
         return render_template('camera_history.html', camera_history=[])
 
+@app.route('/api/photo-history/<username>', methods=['GET'])
+def photo_history_by_user(username):
+    try:
+        if os.path.exists(PHOTO_RESULTS_PATH):
+            with open(PHOTO_RESULTS_PATH, 'r', encoding='utf-8') as f:
+                all_data = json.load(f)
+        else:
+            all_data = []
+
+        # 🔑 로그인한 유저의 것만 필터링
+        user_data = [entry for entry in all_data if entry.get('username') == username]
+
+        return jsonify({'success': True, 'photos': user_data})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e), 'photos': []})
+
+
+
 @app.route('/camera_history.html')
 def camera_history3():
     try:
@@ -570,6 +588,70 @@ def show_level2_ranking():
     best_list.sort(key=lambda x: x["score"], reverse=True)
 
     return render_template("level2.html", results=best_list)
+
+
+#사진 삭제 api
+
+@app.route('/api/delete-photo', methods=['POST'])
+def delete_photo():
+    try:
+        data = request.get_json()
+        filename_to_delete = data.get('filename')
+
+        if not filename_to_delete:
+            return jsonify({'success': False, 'message': 'ファイル名が指定されていません'})
+
+        # photo_results.json 로드
+        if os.path.exists(PHOTO_RESULTS_PATH):
+            with open(PHOTO_RESULTS_PATH, 'r', encoding='utf-8') as f:
+                records = json.load(f)
+        else:
+            records = []
+
+        # 해당 filename을 제외한 나머지만 남김
+        new_records = [entry for entry in records if entry.get('filename') != filename_to_delete]
+
+        # 파일 업데이트
+        with open(PHOTO_RESULTS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(new_records, f, ensure_ascii=False, indent=2)
+
+        # 실제 이미지 파일도 삭제 (선택)
+        photo_path = os.path.join('static/photos', filename_to_delete)
+        if os.path.exists(photo_path):
+            os.remove(photo_path)
+
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+
+# 사진 좋아요 
+@app.route('/api/photo-like-toggle/<photo_id>', methods=['POST'])
+def toggle_like(photo_id):
+    username = request.json.get('username')
+    if not username:
+        return jsonify({'success': False, 'message': 'ユーザー名が必要です'}), 400
+
+    with open(PHOTO_RESULTS_PATH, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    for item in data:
+        if item.get('id') == photo_id:
+            liked_users = item.get('liked_users', [])
+            if username in liked_users:
+                liked_users.remove(username)
+                item['likes'] = max(item.get('likes', 1) - 1, 0)
+            else:
+                liked_users.append(username)
+                item['likes'] = item.get('likes', 0) + 1
+            item['liked_users'] = liked_users
+            break
+
+    with open(PHOTO_RESULTS_PATH, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+    return jsonify({'success': True})
 
 
 # (3) レベル3ボタン用のルート
@@ -659,11 +741,13 @@ def photo_analyze():
         
         object_names = [obj.name for obj in objects]
         translated_names = [translate_to_japanese(name) for name in object_names]
+        username = data.get('username')
         
         result_data = {
             "filename": filename,
             "en": object_names,
             "jp": translated_names,
+            "username" :username ,
             "timestamp": datetime.now().isoformat()
         }
 
