@@ -251,18 +251,27 @@ def menu():
 ################################
 
 @app.route('/api/login', methods=['POST'])
-def login_api():
+def login():
     data = request.get_json()
-    users = load_users()
     username = data.get('username')
     password = data.get('password')
 
-    for user in users:
-        if user.get('username') == username and user.get('password') == password:
-            return jsonify({'success': True, 'username': username})
+    try:
+        with open('users.json', 'r') as f:
+            users = json.load(f)
+    except Exception:
+        return jsonify({'success': False, 'message': 'ユーザーデータを読み込めませんでした'})
 
-    # For testing purposes, allow any login
-    return jsonify({'success': True, 'username': username})
+    user = next((u for u in users if u['username'] == username), None)
+
+    if not user:
+        return jsonify({'success': False, 'message': 'ユーザーが見つかりません'})
+
+    if user['password'] != password:
+        return jsonify({'success': False, 'message': 'パスワードが正しくありません'})
+
+    return jsonify({'success': True})
+
 
 
 ################################
@@ -413,28 +422,32 @@ def quiz_history():
 def profile():
     return render_template('profile.html')
 
+
+
+from flask import request, jsonify
+from datetime import datetime
+
 @app.route('/api/quiz-result', methods=['POST'])
 def save_quiz_result():
     data = request.get_json()
     level = data.get('level')
     username = data.get('username')
     score = data.get('score', 0)
-    total = data.get('total', 50)  # Default to 50 for continuous quiz
+    total = data.get('total', 50)  # Default to 50
     answers = data.get('answers', [])
-    
+
     if level not in [1, 2, 3]:
         return jsonify({'success': False, 'message': '無効なレベルです'})
-        
+
     result = {
         'username': username,
         'level': level,
         'score': score,
         'total': total,
-        'answers': answers,
+        'answers': answers,  # userAnswer, correctAnswer, correct 포함된 상태로
         'timestamp': datetime.now().isoformat()
     }
 
-    # ★ 레벨ごとにファイルを읽어들여、결과を추가して저장
     results = load_results_by_level(level)
     results.append(result)
 
@@ -442,6 +455,7 @@ def save_quiz_result():
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'message': '結果の保存中にエラーが発生しました'})
+
 
 
 
@@ -770,6 +784,63 @@ def get_quiz_history(username):
     
     return jsonify({'success': True, 'history': user_results})
 
+@app.route('/api/quiz-history/<username>', methods=['GET'])
+def get_quiz_history3(username):
+    level = request.args.get('level')
+
+    if level not in ['1', '2', '3']:
+        return jsonify({'success': False, 'message': '無効なレベルです'})
+
+    file_map = {
+        '1': 'level1_results.json',
+        '2': 'level2_results.json',
+        '3': 'level3_results.json'
+    }
+
+    filepath = file_map[level]
+
+    try:
+        with open(filepath, 'r') as f:
+            all_results = json.load(f)
+    except FileNotFoundError:
+        return jsonify({'success': True, 'history': []})  # 파일이 없으면 빈 리스트 반환
+
+    # 해당 사용자만 필터링
+    user_results = [r for r in all_results if r['username'] == username]
+
+    return jsonify({'success': True, 'history': user_results})
+
+@app.route('/api/quiz-result', methods=['POST'])
+def save_quiz_result3():
+    data = request.get_json()
+    username = data.get('username')
+    level = str(data.get('level'))
+
+    if level not in ['1', '2', '3']:
+        return jsonify({'success': False, 'message': '無効なレベルです'})
+
+    filename = f'level{level}_results.json'
+
+    new_entry = {
+        'username': username,
+        'score': data.get('score'),
+        'level': level,
+        'timestamp': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+        'answers': data.get('answers', [])
+    }
+
+    try:
+        with open(filename, 'r') as f:
+            all_data = json.load(f)
+    except FileNotFoundError:
+        all_data = []
+
+    all_data.append(new_entry)
+
+    with open(filename, 'w') as f:
+        json.dump(all_data, f, indent=2, ensure_ascii=False)
+
+    return jsonify({'success': True})
 
 ################################
 # API: 사진 인식 및 저장
