@@ -677,20 +677,49 @@ def show_level3_ranking():
 # API: 퀴즈 히스토리
 ################################
 
+## 不正解履歴を表示
 @app.route('/api/quiz-history/<username>', methods=['GET'])
 def get_quiz_history(username):
-    # 全レベルのファイルを合算してユーザー履歴を取得
-    all_results = []
-    for lvl in [1, 2, 3]:
-        results = load_results_by_level(lvl)
-        all_results.extend(results)
+    """指定したレベルをクエリパラメータから取得し、当該ユーザーの不正解履歴のみ返す。"""
+    # クエリパラメータから level を取得
+    level_str = request.args.get('level')
+    if not level_str:
+        return jsonify({'success': False, 'message': 'レベルが指定されていません'})
+    
+    try:
+        level = int(level_str)
+    except:
+        return jsonify({'success': False, 'message': 'レベル指定が不正です'})
 
-    user_results = [r for r in all_results if r.get('username') == username]
-    
-    # Sort by timestamp (newest first)
-    user_results.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
-    
-    return jsonify({'success': True, 'history': user_results})
+    if level not in [1, 2, 3]:
+        return jsonify({'success': False, 'message': 'レベルは1,2,3のいずれかにしてください'})
+
+    # 指定されたレベルの結果だけ読み込む
+    results = load_results_by_level(level)
+
+    # 指定ユーザーの不正解のみ抽出
+    user_incorrect_results = []
+    for record in results:
+        if record.get('username') == username:
+            wrong_answers = []
+            for ans in record.get('answers', []):
+                if ans.get('correct') == False:
+                    wrong_answers.append(ans)
+            
+            # 不正解がある場合、そのレコードを追加
+            if len(wrong_answers) > 0:
+                # タイムスタンプ順に並べたい場合は最後にソートしてもOK
+                user_incorrect_results.append({
+                    "username": record.get('username'),
+                    "level": record.get('level'),
+                    "timestamp": record.get('timestamp', ''),
+                    "answers": wrong_answers
+                })
+
+    # タイムスタンプで並べ替え (新しい順)
+    user_incorrect_results.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+
+    return jsonify({'success': True, 'history': user_incorrect_results})
 
 
 ################################
