@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>カメラ履歴</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      padding-bottom: 80px; /* 下部メニューのスペース */
+    }
+    .back-icon {
+      font-size: 28px;
+      font-weight: bold;
+      margin-right: 16px;
+      cursor: pointer;
+      background-color: white;
+      color: #007bff;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .username {
+      font-size: 16px;
+      color: white;
+    }
+    .history-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .history-item {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      width: 200px;
+      text-align: center;
+    }
+    .history-item img {
+      width: 100%;
+      border-radius: 5px;
+    }
+    .translated-label {
+      margin-top: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+    .buttons {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      background-color: #ffffff;
+      border-top: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .main-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #007bff;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .button-icon {
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="back-icon" onclick="location.href='menu.html'">&#x2039;</div>
+    <div class="username">ようこそ {{ username }} さん</div>
+  </div>
+
+  <div class="container">
+    <h1>撮影履歴一覧</h1>
+    <div class="history-grid">
+      {% for item in camera_history %}
+        <div class="history-item">
+          <img src="{{ item.image_url }}" alt="Photo">
+          <div class="translated-label">{{ item.translation }}</div>
+        </div>
+      {% endfor %}
+      {% if camera_history|length == 0 %}
+        <p>履歴はまだありません。</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="buttons">
+    
+    </div>
+    <div class="main-button" onclick="location.href='quiz.html'">
+      <div class="button-icon">❓</div>
+      <div class="button-text">クイズ</div>
+    </div>
+    <div class="main-button" onclick="location.href='camera.html'">
+      <div class="button-icon">📷</div>
+      <div class="button-text">カメラ</div>
+    </div>
+    <div class="main-button" onclick="location.href='menu.html'">
+      <div class="button-icon">☰</div>
+      <div class="button-text">メニュー</div>
+    </div>
+  </div>
+</body>
+</html>

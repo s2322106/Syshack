@@ -1,0 +1,694 @@
+[
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 4,
+    "total": 5,
+    "answers": [
+      {
+        "question": "お祭りでよく見る食べ物は？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "「節分」に豆をまく理由は？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "お昼にする挨拶は？",
+        "userAnswer": 2,
+        "correctAnswer": 2,
+        "correct": true
+      },
+      {
+        "question": "日本で一番高い山は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "日本の食事でよく使う道具は？",
+        "userAnswer": 3,
+        "correctAnswer": 2,
+        "correct": false
+      }
+    ],
+    "timestamp": "__timestamp__"
+  },
+  {
+    "username": "aaa",
+    "level": 2,
+    "score": 4,
+    "total": 5,
+    "answers": [
+      {
+        "question": "江戸時代の庶民文化として人気があった演劇の名前は何ですか？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "日本の多くの学校や仕事は、何月から始まりますか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "神社で買う「お守り」は何のために持つものですか？",
+        "userAnswer": 3,
+        "correctAnswer": 3,
+        "correct": true
+      },
+      {
+        "question": "短歌の基本の音数は何ですか？",
+        "userAnswer": 1,
+        "correctAnswer": 3,
+        "correct": false
+      },
+      {
+        "question": "年が明けて初めて神社に参拝することを何と言いますか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      }
+    ],
+    "timestamp": "__timestamp__"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 5,
+    "total": 5,
+    "answers": [
+      {
+        "question": "雨が多い季節（5月〜7月）は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "お正月に食べる料理は？",
+        "userAnswer": 2,
+        "correctAnswer": 2,
+        "correct": true
+      },
+      {
+        "question": "日本人が旅行でよく行く場所は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "日本の伝統的な服は？",
+        "userAnswer": 2,
+        "correctAnswer": 2,
+        "correct": true
+      },
+      {
+        "question": "「桜餅」はどの季節の和菓子？",
+        "userAnswer": 3,
+        "correctAnswer": 3,
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-26T11:46:13.944912"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 2,
+    "total": 5,
+    "answers": [
+      {
+        "question": "「盆踊り」はいつ？",
+        "userAnswer": 0,
+        "correctAnswer": 1,
+        "correct": false
+      },
+      {
+        "question": "「お花見」とは何をする？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "お寺の鐘の音は何の意味？",
+        "userAnswer": 3,
+        "correctAnswer": 1,
+        "correct": false
+      },
+      {
+        "question": "日本一高い東京のタワーは？",
+        "userAnswer": 0,
+        "correctAnswer": 2,
+        "correct": false
+      },
+      {
+        "question": "日本の国旗のデザインは？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-26T12:13:01.316121"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 5,
+    "total": 5,
+    "answers": [
+      {
+        "question": "折り紙でよく作る動物は？",
+        "userAnswer": 2,
+        "correctAnswer": 2,
+        "correct": true
+      },
+      {
+        "question": "日本人の主食は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "日本人が旅行でよく行く場所は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "雨が多い季節（5月〜7月）は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "神社でお参りするときの作法は？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T12:19:16.125273"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 1,
+    "total": 5,
+    "answers": [
+      {
+        "question": "桜が満開になる季節は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:52:15.070365"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 2,
+    "total": 5,
+    "answers": [
+      {
+        "question": "お祭りでよく見る食べ物は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:52:20.979535"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 3,
+    "total": 5,
+    "answers": [
+      {
+        "question": "日本の首都はどこですか？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:52:31.423543"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 4,
+    "total": 5,
+    "answers": [
+      {
+        "question": "日本の伝統的な紙は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:52:39.379763"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 5,
+    "total": 5,
+    "answers": [
+      {
+        "question": "電車に乗るときに使うカードは？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:52:44.242551"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 1,
+    "total": 5,
+    "answers": [
+      {
+        "question": "お正月に食べる料理は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:54:24.011445"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 1,
+    "total": 5,
+    "answers": [
+      {
+        "question": "日本一高い東京のタワーは？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-27T14:54:28.089677"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 1,
+    "total": 5,
+    "answers": [
+      {
+        "question": "おにぎりは何で作る？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:54:33.482735"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 2,
+    "total": 5,
+    "answers": [
+      {
+        "question": "布団などで覆われた暖かいテーブルは？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:54:43.121530"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 3,
+    "total": 5,
+    "answers": [
+      {
+        "question": "「桜餅」はどの季節の和菓子？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:54:50.385685"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 4,
+    "total": 5,
+    "answers": [
+      {
+        "question": "花火大会が多い季節は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:54:59.654988"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 5,
+    "total": 5,
+    "answers": [
+      {
+        "question": "「盆踊り」はいつ？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:55:46.438680"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 1,
+    "total": 5,
+    "answers": [
+      {
+        "question": "日本人の主食は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:56:58.409976"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 2,
+    "total": 5,
+    "answers": [
+      {
+        "question": "学校でみんなで食べる昼ごはんは？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:57:01.630541"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 3,
+    "total": 5,
+    "answers": [
+      {
+        "question": "日本で一番高い山は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:57:04.882644"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 4,
+    "total": 5,
+    "answers": [
+      {
+        "question": "夏祭りで着る伝統的な服は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:57:07.747805"
+  },
+  {
+    "username": "admin",
+    "level": 1,
+    "score": 5,
+    "total": 5,
+    "answers": [
+      {
+        "question": "米から作る日本のお酒は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:57:10.741050"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 1,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本の食事でよく使う道具は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:54:25.312655"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 1,
+    "total": 50,
+    "answers": [
+      {
+        "question": "桜が満開になる季節は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:58:45.031960"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 2,
+    "total": 50,
+    "answers": [
+      {
+        "question": "電車に乗るときに使うカードは？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:58:49.793538"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 3,
+    "total": 50,
+    "answers": [
+      {
+        "question": "「七夕」は何月何日？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:58:53.592496"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 4,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本人がよく食べる料理は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:58:56.844453"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 5,
+    "total": 50,
+    "answers": [
+      {
+        "question": "子どもの成長を祝う行事（3歳・5歳・7歳）は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:59:08.420506"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 5,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本人が旅行でよく行く場所は？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-27T16:59:10.130066"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "「盆踊り」はいつ？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-27T16:59:18.847972"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 1,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本で一番高い山は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:59:25.102829"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 2,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本のお金の単位は何ですか？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:59:31.817877"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 3,
+    "total": 50,
+    "answers": [
+      {
+        "question": "お正月に食べる料理は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:59:36.103932"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 4,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本の文字は「ひらがな」「カタカナ」と何？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:59:39.172904"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 5,
+    "total": 50,
+    "answers": [
+      {
+        "question": "お祭りでよく見る食べ物は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T16:59:44.844760"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 6,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本の伝統的な紙は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T17:00:00.274730"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 7,
+    "total": 50,
+    "answers": [
+      {
+        "question": "1月1日は何の日？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T17:00:09.345096"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 1,
+    "total": 50,
+    "answers": [
+      {
+        "question": "What dishes do Japanese people often eat?",
+        "correct": true
+      }
+    ],
+    "language": "en",
+    "timestamp": "2025-03-28T20:19:54.247612"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 2,
+    "total": 50,
+    "answers": [
+      {
+        "question": "What day is January 1?",
+        "correct": true
+      }
+    ],
+    "language": "en",
+    "timestamp": "2025-03-28T20:20:01.150306"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 2,
+    "total": 50,
+    "answers": [
+      {
+        "question": "What is December 31 called?",
+        "correct": false
+      }
+    ],
+    "language": "ja",
+    "timestamp": "2025-03-28T20:20:18.943339"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 1,
+    "total": 50,
+    "answers": [
+      {
+        "question": "朝にする挨拶は？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-29T05:10:17.509158"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 1,
+    "total": 50,
+    "answers": [
+      {
+        "question": "雨が多い季節（5月〜7月）は？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-29T05:10:19.305837"
+  },
+  {
+    "username": "aaa",
+    "level": 1,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "「桜餅」はどの季節の和菓子？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-29T05:11:46.836176"
+  }
+]
