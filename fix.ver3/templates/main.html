@@ -4,121 +4,162 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>メインページ</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    html, body {
-      height: 100%;
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f4f4f4;
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
-    }
-    body {
       display: flex;
       flex-direction: column;
-      background-color: #f4f4f4;
+      min-height: 100vh;
+      max-width: 100%;
+      overflow-x: hidden;
     }
+    
     .header {
-      background-color: #007bff;
+      background-color: #4285F4;
       color: white;
-      padding: 10px 15px;
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+    
+    .welcome-text {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .logout-btn {
+      background: transparent;
+      border: 1px solid white;
+      color: white;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
     .content {
       flex: 1;
+      padding: 0;
       display: flex;
       flex-direction: column;
-      padding: 10px;
+      margin-bottom: 60px; /* Space for bottom nav */
     }
-    .title {
+    
+    .page-title {
       text-align: center;
-      margin: 10px 0;
+      font-size: 32px;
+      font-weight: bold;
+      margin: 20px 0;
+      padding: 0 15px;
     }
+    
     .image-container {
       flex: 1;
       display: flex;
-      align-items: center;
       justify-content: center;
-      margin-bottom: 10px;
+      overflow: hidden;
+      border-radius: 15px;
+      margin: 0 15px 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
+    
     .main-image {
       width: 100%;
       height: 100%;
-      max-height: calc(100vh - 160px);
       object-fit: cover;
-      border-radius: 10px;
+      min-height: calc(100vh - 210px);
+      display: block;
     }
-    .logout-btn {
-      background: none;
-      border: 1px solid white;
-      color: white;
-      border-radius: 5px;
-      padding: 6px 12px;
-      cursor: pointer;
-    }
-    /* Bottom Navigation */
+    
     .bottom-nav {
-      display: flex;
-      background-color: white;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
       position: fixed;
       bottom: 0;
-      left: 0;
       width: 100%;
+      background: white;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
       z-index: 1000;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
     }
+    
     .nav-item {
-      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 8px 0;
       color: #666;
       text-decoration: none;
+      padding: 5px 0;
+      flex-grow: 1;
+      text-align: center;
+    }
+    
+    .nav-item.active {
+      color: #4285F4;
+      border-top: 3px solid #4285F4;
+      padding-top: 2px;
+    }
+    
+    .nav-icon {
+      font-size: 22px;
+      margin-bottom: 3px;
+    }
+    
+    .nav-text {
       font-size: 12px;
     }
-    .nav-item.active {
-      color: #007bff;
-      border-top: 3px solid #007bff;
-    }
-    .nav-icon {
-      font-size: 24px;
-      margin-bottom: 4px;
+    
+    /* Highlight current page in navigation */
+    .nav-item[href="main.html"] {
+      color: #4285F4;
+      border-top: 3px solid #4285F4;
+      padding-top: 2px;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <div>ようこそ <span id="username"></span> さん</div>
+    <div class="welcome-text">ようこそ <span id="username"></span> さん</div>
     <button class="logout-btn" onclick="logout()">ログアウト</button>
   </div>
 
   <div class="content">
-    <h1 class="title">日本の旅</h1>
+    <h1 class="page-title">日本の旅</h1>
     <div class="image-container">
       <img src="/static/mtfuji.jpg" alt="富士山" class="main-image">
     </div>
   </div>
 
   <div class="bottom-nav">
-    <a href="main.html" class="nav-item active">
+    <a href="main.html" class="nav-item">
       <div class="nav-icon">🏠</div>
-      <div>ホーム</div>
+      <div class="nav-text">ホーム</div>
     </a>
     <a href="quiz.html" class="nav-item">
       <div class="nav-icon">❓</div>
-      <div>クイズ</div>
+      <div class="nav-text">クイズ</div>
     </a>
     <a href="camera.html" class="nav-item">
       <div class="nav-icon">📷</div>
-      <div>カメラ</div>
+      <div class="nav-text">カメラ</div>
     </a>
     <a href="menu.html" class="nav-item">
       <div class="nav-icon">☰</div>
-      <div>メニュー</div>
+      <div class="nav-text">メニュー</div>
     </a>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // Check if user is logged in
     document.addEventListener('DOMContentLoaded', function() {
@@ -129,11 +170,10 @@
         document.getElementById('username').textContent = user;
       }
       
-      // Set active navigation based on current page
+      // Set active navigation
       const currentPage = window.location.pathname.split('/').pop() || 'main.html';
       document.querySelectorAll('.nav-item').forEach(item => {
-        const href = item.getAttribute('href');
-        if (href === currentPage) {
+        if (item.getAttribute('href') === currentPage) {
           item.classList.add('active');
         } else {
           item.classList.remove('active');
