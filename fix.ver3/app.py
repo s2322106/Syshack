@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, send_from_directory, request, jsonify
 import json
 import os
@@ -8,10 +9,17 @@ from datetime import datetime
 from google.cloud import vision
 import requests
 
-# 환경 변수 하드코딩 (주의: 실제 서비스에서는 보안상 위험함)
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "vision_key.json"  # 서비스 계정 키 경로
-DEEPL_API_KEY = "YOUR_DEEPL_API_KEY"
-GOOGLE_VISION_PUBLIC_KEY = "AIzaSyDh3F0OXIC4a-V7hd9Z6duLA_9UJ7YOV74"
+PHOTO_SAVE_DIR = 'static/photos'
+PHOTO_RESULTS_PATH = 'photo_results.json'
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(BASE_DIR, "vision_key.json")
+
+
+  # 서비스 계정 키 경로
+DEEPL_API_KEY = "a6da533c-6070-4fb0-a6f4-7e2f57af830b:fx"
+GOOGLE_VISION_PUBLIC_KEY = "3b47c284013af32f47fc63afa13e68bd97a9159c	"
 
 # Flask 앱 생성
 app = Flask(
@@ -38,6 +46,37 @@ LEVEL2_QUIZ_PATH = os.path.join(STATIC_DIR, 'level2_quiz_full_50.json')
 LEVEL3_QUIZ_PATH = os.path.join(STATIC_DIR, 'level3_quiz_full_50.json')
 
 os.makedirs(PHOTO_SAVE_DIR, exist_ok=True)
+
+# DeepL 번역 함수 추가
+def translate_to_japanese_deepl(english_name):
+    try:
+        url = "https://api-free.deepl.com/v2/translate"
+        params = {
+            "auth_key": DEEPL_API_KEY,
+            "text": english_name,
+            "target_lang": "JA"
+        }
+        response = requests.post(url, data=params)
+        result = response.json()
+        translated_text = result["translations"][0]["text"]
+        return translated_text
+    except Exception as e:
+        print("DeepL翻訳エラー:", e)
+        return english_name + "（翻訳）"
+
+# 기존 사전 + DeepL 사용
+
+def translate_to_japanese(english_name):
+    dictionary = {
+        "Bottle": "ボトル",
+        "Chair": "椅子",
+        "Table": "テーブル",
+        "Book": "本"
+    }
+    if english_name in dictionary:
+        return dictionary[english_name]
+    else:
+        return translate_to_japanese_deepl(english_name)
 
 
 ################################
@@ -126,10 +165,6 @@ def load_quiz_data(level):
 def index():
     return render_template('index.html')
 
-@app.route('/index.html')
-def index_html():
-    return render_template('index.html')
-
 @app.route('/main.html')
 def main():
     return render_template('main.html')
@@ -149,13 +184,6 @@ def menu():
     except:
         return render_template('menu.html')
 
-@app.route('/profile.html')
-def profile():
-    return render_template('profile.html')
-
-@app.route('/logout.html')
-def logout():
-    return redirect('/')
 
 ################################
 # API: 사용자 로그인
@@ -185,97 +213,17 @@ def register_api():
     data = request.get_json()
     users = load_users()
     username = data.get('username')
-    email = data.get('email', '')  # メールアドレスも取得
     password = data.get('password')
 
     if any(user.get('username') == username for user in users):
         return jsonify({'success': False, 'message': 'このユーザー名は既に使用されています'})
 
-    # 新しいユーザーを追加
-    new_user = {
-        'username': username,
-        'email': email,
-        'password': password
-    }
-    users.append(new_user)
+    users.append({'username': username, 'password': password})
 
     if save_users(users):
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'message': 'ユーザー登録中にエラーが発生しました'})
-
-
-################################
-# API: プロフィール関連
-################################
-
-@app.route('/api/user-profile', methods=['GET'])
-def get_user_profile():
-    """ユーザープロフィール情報を取得する"""
-    username = request.args.get('username')
-    
-    if not username:
-        return jsonify({'success': False, 'message': 'ユーザー名が指定されていません'})
-    
-    users = load_users()
-    for user in users:
-        if user.get('username') == username:
-            # パスワードは返さない
-            user_data = {
-                'username': user.get('username'),
-                'email': user.get('email', '')
-            }
-            return jsonify({'success': True, 'user': user_data})
-    
-    return jsonify({'success': False, 'message': 'ユーザーが見つかりません'})
-
-
-@app.route('/api/update-profile', methods=['POST'])
-def update_profile():
-    """ユーザープロフィール情報を更新する"""
-    data = request.get_json()
-    username = data.get('username')
-    email = data.get('email')
-    current_password = data.get('currentPassword')
-    new_password = data.get('newPassword')
-    
-    if not username or not current_password:
-        return jsonify({'success': False, 'message': '必須項目が不足しています'})
-    
-    users = load_users()
-    user_found = False
-    original_username = None
-    
-    for i, user in enumerate(users):
-        if user.get('username') == username or user.get('username') == request.headers.get('X-Current-User'):
-            original_username = user.get('username')
-            # パスワード確認
-            if user.get('password') != current_password:
-                return jsonify({'success': False, 'message': '現在のパスワードが正しくありません'})
-            
-            # プロフィール更新
-            users[i]['username'] = username
-            users[i]['email'] = email
-            
-            # パスワード更新（新しいパスワードが指定されている場合）
-            if new_password:
-                users[i]['password'] = new_password
-            
-            user_found = True
-            break
-    
-    if not user_found:
-        return jsonify({'success': False, 'message': 'ユーザーが見つかりません'})
-    
-    # usersファイルを保存
-    if save_users(users):
-        return jsonify({
-            'success': True, 
-            'message': 'プロフィールが更新されました',
-            'updatedUsername': username if username != original_username else None
-        })
-    else:
-        return jsonify({'success': False, 'message': 'プロフィールの保存に失敗しました'})
 
 
 ################################
@@ -351,6 +299,18 @@ def get_quiz_questions(level):
 # API: 퀴즈 결과 저장
 ################################
 
+@app.route('/camera_history.html')
+def camera_history():
+    return render_template('camera_history.html')
+
+@app.route('/quiz_history.html')
+def quiz_history():
+    return render_template('quiz_history.html')
+
+@app.route('/profile.html')
+def profile():
+    return render_template('profile.html')
+
 @app.route('/api/quiz-result', methods=['POST'])
 def save_quiz_result():
     data = request.get_json()
@@ -380,6 +340,7 @@ def save_quiz_result():
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'message': '結果の保存中にエラーが発生しました'})
+
 
 
 ################################
@@ -459,6 +420,85 @@ def show_level1_ranking():
     # テンプレートへ渡す
     return render_template("level1.html", results=best_list)
 
+@app.route('/camera_history.html')
+def camera_history2():
+    try:
+        photo_folder = os.path.join(app.static_folder, 'photos')
+        photo_files = []
+
+        # static/photos 以下の画像ファイル一覧取得（拡張子 jpg/png/jpeg 限定）
+        for filename in os.listdir(photo_folder):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                photo_files.append({
+                    'image_url': '/static/photos/' + filename,
+                    'filename': filename
+                })
+
+        # ファイル名で降順ソート（新しい順）
+        photo_files.sort(key=lambda x: x['filename'], reverse=True)
+
+        return render_template('camera_history.html', camera_history=photo_files)
+
+    except Exception as e:
+        print("写真読み込みエラー:", e)
+        return render_template('camera_history.html', camera_history=[])
+
+
+@app.route('/camera_history.html')
+def camera_history1():
+    try:
+        with open(PHOTO_RESULTS_PATH, 'r', encoding='utf-8') as f:
+            raw_data = json.load(f)
+
+        # DeepL 번역 적용 및 날짜 정렬
+        for item in raw_data:
+            item['image_url'] = '/static/photos/' + item['filename']
+
+            # 객체 이름 목록 추출
+            object_names = [obj['name'] for obj in item.get('objects', [])]
+            item['objects'] = object_names
+
+            # 번역된 이름 리스트 생성
+            item['translated_objects'] = [translate_to_japanese(name) for name in object_names]
+
+            # 날짜 파싱 (없으면 현재시간)
+            try:
+                item['timestamp_obj'] = datetime.fromisoformat(item['timestamp'])
+            except:
+                item['timestamp_obj'] = datetime.now()
+
+        # 최신순 정렬
+        sorted_data = sorted(raw_data, key=lambda x: x['timestamp_obj'], reverse=True)
+
+        return render_template('camera_history.html', camera_history=sorted_data)
+
+    except Exception as e:
+        print("履歴ロードエラー:", e)
+        return render_template('camera_history.html', camera_history=[])
+
+@app.route('/camera_history.html')
+def camera_history3():
+    try:
+        with open(PHOTO_RESULTS_PATH, 'r', encoding='utf-8') as f:
+            raw_data = json.load(f)
+
+        for item in raw_data:
+            item['image_url'] = '/static/photos/' + item['filename']
+            object_names = [obj['name'] for obj in item.get('objects', [])] if 'objects' in item else [item['en']]
+            item['objects'] = object_names
+            item['translated_objects'] = [translate_to_japanese(name) for name in object_names]
+            try:
+                item['timestamp_obj'] = datetime.fromisoformat(item['timestamp'])
+            except:
+                item['timestamp_obj'] = datetime.now()
+
+        sorted_data = sorted(raw_data, key=lambda x: x['timestamp_obj'], reverse=True)
+
+        return render_template('camera_history.html', camera_history=sorted_data)
+
+    except Exception as e:
+        print("履歴ロードエラー:", e)
+        return render_template('camera_history.html', camera_history=[])
 
 # (2) レベル2ボタン用のルート
 #     /ranking/2 でアクセス
@@ -526,16 +566,6 @@ def show_level3_ranking():
 
     return render_template("level3.html", results=best_list)
 
-#カメラ履歴を表示
-#def menuは上で定義済みだったので、名前を変更した
-@app.route("/camera_history.html")
-def camera_history():
-    return render_template("camera_history.html")
-
-#クイズ履歴を表示
-@app.route("/quiz_history.html")
-def quiz_history():
-    return render_template("quiz_history.html")
 
 ################################
 # API: 퀴즈 히스토리
@@ -588,13 +618,14 @@ def photo_analyze():
         if not objects:
             return jsonify({'success': False, 'message': '物体が検出されませんでした'})
 
-        first_obj = objects[0].name
-        jp_translation = translate_to_japanese(first_obj)
-
+        
+        object_names = [obj.name for obj in objects]
+        translated_names = [translate_to_japanese(name) for name in object_names]
+        
         result_data = {
             "filename": filename,
-            "en": first_obj,
-            "jp": jp_translation,
+            "en": object_names,
+            "jp": translated_names,
             "timestamp": datetime.now().isoformat()
         }
 
@@ -602,8 +633,8 @@ def photo_analyze():
 
         return jsonify({
             'success': True,
-            'en': first_obj,
-            'jp': jp_translation,
+            'en': object_names,
+            'jp': translated_names,
             'objects': [{
                 'name': obj.name,
                 'boundingPoly': {
@@ -693,9 +724,7 @@ if __name__ == '__main__':
         elif level == 3 and not os.path.exists(LEVEL3_RESULTS_JSON_PATH):
             save_results_by_level(3, [])
     
-    # Create users.json if it doesn't exist
-    if not os.path.exists(USERS_JSON_PATH):
-        save_users([])
-    
     # 적절히 포트 번호나 호스트 설정
+
     app.run(host='0.0.0.0', port=5001, debug=True)
+
