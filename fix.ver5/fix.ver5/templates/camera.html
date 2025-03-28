@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>カメラ撮影</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .menu-options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .menu-option {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+    canvas, video {
+      border-radius: 10px;
+      border: 2px solid #007bff;
+    }
+    .center-buttons {
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <div>📸 カメラで撮影</div>
+      <button class="button" @click="goToMain">🔁 戻る</button>
+    </div>
+
+    <div class="container">
+      <div class="menu-options">
+        <div class="menu-option">
+          <video ref="video" v-show="!photo" autoplay playsinline muted width="640" height="480"></video>
+          <canvas ref="canvas" width="640" height="480" v-show="photo"></canvas>
+        </div>
+
+        <div class="center-buttons" v-if="!photo">
+          <button class="button" @click="capturePhoto">📸 撮影する</button>
+        </div>
+        <div class="center-buttons" v-if="photo">
+          <button class="button" @click="retakePhoto">🔄 もう一度撮影</button>
+        </div>
+
+        <div class="menu-option" v-if="translatedObjects.length > 0">
+          <h3>検出された物体一覧:</h3>
+          <ul>
+            <li v-for="(obj, index) in translatedObjects" :key="index">
+              [[ index + 1 ]]. [[ obj.en ]]（[[ obj.jp ]]）
+            </li>
+            
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import config from '/static/api-config.js';
+
+    new Vue({
+      el: '#app',
+      delimiters: ['[[', ']]'],
+      data: {
+        stream: null,
+        photo: '',
+        objects: [],
+        translatedObjects: [],
+        lastFrameData: null,
+        stillStartTime: null,
+        detectionCooldown: false
+      },
+      methods: {
+        startCamera() {
+          navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+              this.stream = stream;
+              this.$refs.video.srcObject = stream;
+              this.setupAutoDetection();
+            })
+            .catch(error => console.error("カメラ起動エラー:", error));
+        },
+        stopCamera() {
+          if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+          }
+        },
+        capturePhoto() {
+          const canvas = this.$refs.canvas;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(this.$refs.video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(blob => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              this.photo = reader.result;
+              this.stopCamera();
+              this.sendToFlask(this.photo);
+            };
+            reader.readAsDataURL(blob);
+          }, 'image/png');
+        },
+        sendToFlask(base64data) {
+          fetch('/api/photo-analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64data })
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                this.objects = data.objects;
+                this.drawBoundingBoxes(this.objects);
+                this.translateLabels();
+              } else {
+                alert("物体検出に失敗しました: " + data.message);
+              }
+            })
+            .catch(err => {
+              console.error("Flaskとの通信エラー:", err);
+            });
+        },
+        drawBoundingBoxes(objects) {
+          const canvas = this.$refs.canvas;
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
+          img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            ctx.setLineDash([6, 4]);
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.font = '14px Arial';
+            ctx.fillStyle = 'red';
+
+            objects.forEach(obj => {
+              const v = obj.boundingPoly.normalizedVertices;
+              const x1 = v[0].x * canvas.width;
+              const y1 = v[0].y * canvas.height;
+              const x2 = v[2].x * canvas.width;
+              const y2 = v[2].y * canvas.height;
+              ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+              ctx.fillText(obj.name, x1 + 4, y1 - 6);
+            });
+
+            ctx.setLineDash([]);
+          };
+          img.src = this.photo;
+        },
+        async translateLabels() {
+          const translations = await Promise.all(this.objects.map(async obj => {
+            try {
+              const res = await fetch("https://api-free.deepl.com/v2/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({
+                  auth_key: config.deeplKey,
+                  text: obj.name,
+                  target_lang: "JA"
+                })
+              });
+              const data = await res.json();
+              const jp = data.translations?.[0]?.text || "翻訳失敗";
+              return { en: obj.name, jp };
+            } catch (err) {
+              console.error("翻訳エラー:", err);
+              return { en: obj.name, jp: "翻訳失敗" };
+            }
+          }));
+
+          this.translatedObjects = translations;
+        },
+        setupAutoDetection() {
+          const canvas = this.$refs.canvas;
+          const ctx = canvas.getContext('2d');
+          const video = this.$refs.video;
+
+          setInterval(() => {
+            if (!this.stream) return;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            if (this.lastFrameData) {
+              const diff = this.calculateFrameDifference(this.lastFrameData.data, currentFrame.data);
+              const threshold = 0.02;
+              const isStill = diff < threshold;
+
+              if (isStill) {
+                if (!this.stillStartTime) {
+                  this.stillStartTime = Date.now();
+                } else if (Date.now() - this.stillStartTime > 1000 && !this.detectionCooldown && !this.photo) {
+                  canvas.toBlob(blob => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      this.photo = reader.result;
+                      this.stopCamera();
+                      this.sendToFlask(this.photo);
+                    };
+                    reader.readAsDataURL(blob);
+                  }, 'image/jpeg');
+
+                  this.detectionCooldown = true;
+                  setTimeout(() => {
+                    this.detectionCooldown = false;
+                  }, 3000);
+                }
+              } else {
+                this.stillStartTime = null;
+              }
+            }
+
+            this.lastFrameData = currentFrame;
+          }, 200);
+        },
+        calculateFrameDifference(data1, data2) {
+          let diffPixels = 0;
+          for (let i = 0; i < data1.length; i += 4) {
+            const rDiff = Math.abs(data1[i] - data2[i]);
+            const gDiff = Math.abs(data1[i + 1] - data2[i + 1]);
+            const bDiff = Math.abs(data1[i + 2] - data2[i + 2]);
+            if (rDiff + gDiff + bDiff > 30) diffPixels++;
+          }
+          return diffPixels / (data1.length / 4);
+        },
+        retakePhoto() {
+          this.photo = '';
+          this.objects = [];
+          this.translatedObjects = [];
+          this.stillStartTime = null;
+          this.startCamera();
+        },
+        goToMain() {
+          window.location.href = "/main.html";
+        }
+      },
+      mounted() {
+        this.startCamera();
+      },
+      beforeDestroy() {
+        this.stopCamera();
+      }
+    });
+  </script>
+</body>
+</html>
