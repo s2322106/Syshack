@@ -183,14 +183,16 @@
             <button class="btn btn-outline-primary" @click="backToLevelSelect">レベル選択に戻る</button>
           </div>
           
-          <div v-if="quizHistory.length > 0" class="history-list">
-            <div v-for="(item, index) in quizHistory" :key="index" class="history-item">
-              <div class="question">{{ item.question }}</div>
-              <div :class="item.correct ? 'correct' : 'incorrect'">
-                {{ item.correct ? '✓ 正解' : '✗ 不正解' }}
-              </div>
+          <div v-for="(item, index) in quizHistory" :key="index" class="history-item">
+
+            {% raw %}
+            <div class="question">{{ item.question }}</div>
+            <div :class="item.correct ? 'correct' : 'incorrect'">
+              {{ item.correct ? '✓ 正解' : '✗ 不正解' }}
             </div>
-          </div>
+            {% endraw %}
+          
+          </div>          
           
           <div v-else class="no-history">
             <p>クイズ履歴がありません</p>
