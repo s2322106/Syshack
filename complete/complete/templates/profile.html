@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>プロフィール</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #0069d9;
+    }
+    .message {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      display: flex;
+      background-color: white;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      justify-content: space-around;
+      padding: 8px 0;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #666;
+      text-decoration: none;
+      padding: 5px 0;
+      flex-grow: 1;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .nav-item.active {
+      color: #007bff;
+      border-top: 3px solid #007bff;
+      padding-top: 2px;
+    }
+
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .quiz-button {
+      background-color: #007bff;
+      color: white;
+      border-radius: 50%;
+      width: 70px;
+      height: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: -20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+
+    .quiz-button:hover {
+      transform: scale(1.05);
+      background-color: #0069d9;
+      color: white;
+    }
+
+    .quiz-icon {
+      font-size: 28px;
+      margin-bottom: 2px;
+    }
+
+    .quiz-text {
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .bottom-nav-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      width: 100%;
+    }
+
+    .side-nav-items {
+      display: flex;
+      justify-content: space-around;
+      flex-grow: 1;
+    }
+
+    .content {
+      margin-bottom: 80px; /* Space for bottom nav */
+    }
+  </style>
+</head>
+<body>
+  <div id="profile-app">
+    <div class="header">
+      <div>ようこそ <span id="username"></span> さん</div>
+    </div>
+
+    <div class="content">
+      <div class="container">
+        <h1>プロフィール設定</h1>
+
+        <div class="form-group">
+          <label for="username">ユーザー名</label>
+          <input id="username" type="text" v-model="profile.username" placeholder="ユーザー名">
+        </div>
+
+        <div class="form-group">
+          <label for="email">メールアドレス</label>
+          <input id="email" type="email" v-model="profile.email" placeholder="メールアドレス">
+        </div>
+
+        <div class="form-group">
+          <label for="current-password">現在のパスワード</label>
+          <input id="current-password" type="password" v-model="currentPassword" placeholder="現在のパスワード">
+        </div>
+
+        <div class="form-group">
+          <label for="new-password">新しいパスワード（変更する場合）</label>
+          <input id="new-password" type="password" v-model="newPassword" placeholder="新しいパスワード">
+        </div>
+
+        <button @click="saveProfile">保存</button>
+
+        <div v-if="message" :class="['message', messageType]">
+          {{ message }}
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="bottom-nav-container">
+        <div class="side-nav-items">
+          <a href="camera.html" class="nav-item">
+            <div class="nav-icon">📷</div>
+            <div>カメラ</div>
+          </a>
+        </div>
+
+        <a href="quiz.html" class="quiz-button">
+          <div class="quiz-icon">❓</div>
+          <div class="quiz-text">クイズ</div>
+        </a>
+
+        <div class="side-nav-items">
+          <a href="menu.html" class="nav-item active">
+            <div class="nav-icon">☰</div>
+            <div>メニュー</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const user = localStorage.getItem('username');
+      if (!user) {
+        window.location.href = 'index.html';
+      } else {
+        document.getElementById('username').textContent = user;
+      }
+    });
+
+    new Vue({
+      el: '#profile-app',
+      data: {
+        profile: {
+          username: '',
+          email: ''
+        },
+        currentPassword: '',
+        newPassword: '',
+        message: '',
+        messageType: 'success'
+      },
+      created() {
+        const currentUser = localStorage.getItem('username');
+        if (currentUser) {
+          this.profile.username = currentUser;
+
+          fetch(`/api/user-profile?username=${currentUser}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                this.profile.email = data.user.email || '';
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching user profile:', error);
+              this.message = 'プロフィールの読み込みに失敗しました';
+              this.messageType = 'error';
+            });
+        }
+      },
+      methods: {
+        saveProfile() {
+          if (!this.profile.username) {
+            this.message = 'ユーザー名を入力してください';
+            this.messageType = 'error';
+            return;
+          }
+
+          if (!this.currentPassword) {
+            this.message = '現在のパスワードを入力してください';
+            this.messageType = 'error';
+            return;
+          }
+
+          const userData = {
+            username: this.profile.username,
+            email: this.profile.email,
+            currentPassword: this.currentPassword
+          };
+
+          if (this.newPassword) {
+            userData.newPassword = this.newPassword;
+          }
+
+          fetch('/api/update-profile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                this.message = 'プロフィールが更新されました';
+                this.messageType = 'success';
+
+                if (data.updatedUsername && data.updatedUsername !== localStorage.getItem('username')) {
+                  localStorage.setItem('username', data.updatedUsername);
+                  document.getElementById('username').textContent = data.updatedUsername;
+                }
+
+                this.currentPassword = '';
+                this.newPassword = '';
+              } else {
+                this.message = data.message || 'プロフィールの更新に失敗しました';
+                this.messageType = 'error';
+              }
+            })
+            .catch(error => {
+              console.error('Error updating profile:', error);
+              this.message = 'エラーが発生しました';
+              this.messageType = 'error';
+            });
+        }
+      }
+    });
+  </script>
+</body>
+</html>
