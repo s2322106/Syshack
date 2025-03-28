@@ -35,7 +35,6 @@
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      cursor: default;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -85,12 +84,11 @@
           <button class="button" @click="retakePhoto">🔄 もう一度撮影</button>
         </div>
 
-        <!-- 🔍 감지된 객체 이름 리스트 -->
-        <div class="menu-option" v-if="detectedNames.length > 0">
+        <div class="menu-option" v-if="translatedObjects.length > 0">
           <h3>検出された物体一覧:</h3>
           <ul>
-            <li v-for="(name, index) in detectedNames" :key="index">
-              [[ index + 1 ]]. [[ name ]]
+            <li v-for="(obj, index) in translatedObjects" :key="index">
+              [[ index + 1 ]]. [[ obj.en ]] ([[ obj.jp ]])
             </li>
           </ul>
         </div>
@@ -98,7 +96,6 @@
     </div>
   </div>
 
-  <!-- Vue.js + 외부 JS 불러오기 -->
   <script type="module">
     import config from '/static/api-config.js';
 
@@ -109,7 +106,7 @@
         stream: null,
         photo: '',
         objects: [],
-        detectedNames: [],
+        translatedObjects: [],
         lastFrameData: null,
         stillStartTime: null,
         detectionCooldown: false
@@ -134,7 +131,6 @@
           const canvas = this.$refs.canvas;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(this.$refs.video, 0, 0, canvas.width, canvas.height);
-
           canvas.toBlob(blob => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -144,13 +140,6 @@
             };
             reader.readAsDataURL(blob);
           }, 'image/png');
-        },
-        retakePhoto() {
-          this.photo = '';
-          this.objects = [];
-          this.detectedNames = [];
-          this.stillStartTime = null;
-          this.startCamera();
         },
         sendToFlask(base64data) {
           fetch('/api/photo-analyze', {
@@ -162,8 +151,8 @@
             .then(data => {
               if (data.success) {
                 this.objects = data.objects;
-                this.detectedNames = data.objects.map(obj => obj.name);
                 this.drawBoundingBoxes(this.objects);
+                this.translateLabels();
               } else {
                 alert("物体検出に失敗しました: " + data.message);
               }
@@ -200,6 +189,25 @@
           };
           img.src = this.photo;
         },
+        async translateLabels() {
+          const translations = await Promise.all(this.objects.map(async obj => {
+            try {
+              const res = await fetch("/api/google-translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: obj.name })
+              });
+              const data = await res.json();
+              const jp = data.translated_text || "翻訳失敗";
+              return { en: obj.name, jp };
+            } catch (err) {
+              console.error("翻訳エラー:", err);
+              return { en: obj.name, jp: "翻訳失敗" };
+            }
+          }));
+
+          this.translatedObjects = translations;
+        },
         setupAutoDetection() {
           const canvas = this.$refs.canvas;
           const ctx = canvas.getContext('2d');
@@ -228,6 +236,7 @@
                     };
                     reader.readAsDataURL(blob);
                   }, 'image/jpeg');
+
                   this.detectionCooldown = true;
                   setTimeout(() => {
                     this.detectionCooldown = false;
@@ -250,6 +259,13 @@
             if (rDiff + gDiff + bDiff > 30) diffPixels++;
           }
           return diffPixels / (data1.length / 4);
+        },
+        retakePhoto() {
+          this.photo = '';
+          this.objects = [];
+          this.translatedObjects = [];
+          this.stillStartTime = null;
+          this.startCamera();
         },
         goToMain() {
           window.location.href = "/main.html";
