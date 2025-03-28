@@ -130,7 +130,7 @@
     <!-- ヘッダー -->
     <div class="header d-flex justify-content-between align-items-center">
       <div class="fs-5">
-        ようこそ <span class="fw-bold">{{ username }}</span> さん
+        ようこそ <span class="fw-bold">[[ username ]]</span> さん
       </div>
       <button class="btn btn-secondary btn-back" @click="backToMenu">戻る</button>
     </div>
@@ -173,18 +173,18 @@
       <div v-if="selectedLevel" class="row justify-content-center">
         <div class="col-md-8">
           <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3>レベル{{ selectedLevel }}の不正解履歴</h3>
+            <h3>レベル[[ selectedLevel ]]の不正解履歴</h3>
             <button class="btn btn-outline-primary" @click="backToLevelSelect">レベル選択に戻る</button>
           </div>
           
           <!-- 履歴がある場合 -->
           <div v-if="quizHistory.length > 0">
             <div v-for="(item, index) in quizHistory" :key="index" class="history-item mb-3 border-bottom pb-2">
-              <div class="text-muted mb-2">タイムスタンプ: {{ item.timestamp }}</div>
+              <div class="text-muted mb-2">タイムスタンプ: [[ item.timestamp ]]</div>
               <div v-for="(answer, idx) in item.answers" :key="idx" class="mb-2">
-                <div class="question">Q: {{ answer.question }}</div>
+                <div class="question">Q: [[ answer.question ]]</div>
                 <div class="incorrect">
-                  ✗ 不正解 (あなたの回答: {{ answer.userAnswer }} / 正解: {{ answer.correctAnswer }})
+                  ✗ 不正解 (あなたの回答: [[ answer.userAnswer ]] / 正解: [[ answer.correctAnswer ]])
                 </div>
               </div>
             </div>
@@ -223,6 +223,7 @@
   <script>
     new Vue({
       el: "#app",
+      delimiters: ['[[', ']]'],  // ★★★ Vueのデリミタ変更 ★★★
       data: {
         username: localStorage.getItem("currentUser") || "ゲスト",
         selectedLevel: null,
