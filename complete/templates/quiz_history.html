@@ -202,8 +202,8 @@
 
           <div v-if="quizHistory.length > 0">
             <div v-for="(item, index) in quizHistory" :key="index" class="history-item">
-              <div class="text-muted mb-2">タイムスタンプ: [[ item.timestamp ]]</div>
-              <div v-for="(answer, idx) in item.answers" :key="idx" class="mb-2">
+              <div class="text-muted mb-2">時間: [[ formatTimestamp(item.timestamp) ]]</div>
+              <div v-for="(answer, idx) in item.answers" :key="idx" class="mb-2" v-if="answer.correct === false">
                 <div class="question">Q: [[ answer.question ]]</div>
                 <div class="incorrect">
                   ✗ 不正解 (あなたの回答: [[ answer.userAnswer ]] / 正解: [[ answer.correctAnswer ]])
@@ -218,18 +218,15 @@
       </div>
     </div>
 
-    <!-- 🟦 Bottom Navigation with Floating Quiz Button -->
     <div class="bottom-nav">
       <a href="camera.html" class="nav-item">
         <div class="nav-icon">📷</div>
         <div>カメラ</div>
       </a>
-
       <a href="quiz.html" class="quiz-button">
         <div class="quiz-icon">❓</div>
         <div class="quiz-text">クイズ</div>
       </a>
-
       <a href="menu.html" class="nav-item active">
         <div class="nav-icon">☰</div>
         <div>メニュー</div>
@@ -262,7 +259,7 @@
               if (data.success) {
                 this.quizHistory = data.history;
               } else {
-                console.error('履歴の読み込みに失敗');
+                console.error('履歴の読み込みに失敗しました');
                 this.quizHistory = [];
               }
             })
@@ -270,6 +267,17 @@
               console.error('APIエラー:', error);
               this.quizHistory = [];
             });
+        },
+        formatTimestamp(ts) {
+          if (!ts) return '';
+          const d = new Date(ts);
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const hh = String(d.getHours()).padStart(2, '0');
+          const min = String(d.getMinutes()).padStart(2, '0');
+          const ss = String(d.getSeconds()).padStart(2, '0');
+          return `${yyyy}-${mm}-${dd}　${hh}:${min}:${ss}`;
         }
       }
     });

@@ -11,6 +11,9 @@ import requests
 from flask import request
 from google.cloud import translate
 
+app = Flask(__name__, static_folder='static')
+
+
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "vision_key.json"
 
 PHOTO_SAVE_DIR = 'static/photos'
@@ -422,6 +425,76 @@ def quiz_history():
 def profile():
     return render_template('profile.html')
 
+from datetime import datetime
+import os, json
+from flask import request, jsonify
+
+@app.route('/api/quiz-result', methods=['POST'])
+def save_quiz_result2():
+    data = request.get_json()
+    level = data.get('level')
+    username = data.get('username')
+    score = data.get('score', 0)
+    total = data.get('total', 50)
+    answers = data.get('answers', [])
+    overall_timestamp = datetime.now().isoformat()
+
+    if level not in [1, 2, 3]:
+        return jsonify({'success': False, 'message': '無効なレベルです'})
+
+    # ✅ 전체 점수 결과 저장용
+    result = {
+        'username': username,
+        'level': level,
+        'score': score,
+        'total': total,
+        'answers': answers,
+        'timestamp': overall_timestamp
+    }
+
+    # ✅ 단순화된 답안 기록용 (timestamp 추가)
+    simplified_answers = []
+    for ans in answers:
+        simplified_answers.append({
+            'question': ans.get('question'),
+            'userAnswer': ans.get('userAnswer'),
+            'correctAnswer': ans.get('correctAnswer'),
+            'correct': ans.get('correct'),
+            'timestamp': overall_timestamp
+        })
+
+    simplified_log = {
+        'username': username,
+        'answers': simplified_answers
+    }
+
+    level_result_file = f'level{level}_results.json'
+    level_answer_file = f'answerlv{level}.json'
+
+    try:
+        # 결과 저장
+        if os.path.exists(level_result_file):
+            with open(level_result_file, 'r', encoding='utf-8') as f:
+                results = json.load(f)
+        else:
+            results = []
+        results.append(result)
+        with open(level_result_file, 'w', encoding='utf-8') as f:
+            json.dump(results, f, indent=2, ensure_ascii=False)
+
+        # 단순화된 오답 저장
+        if os.path.exists(level_answer_file):
+            with open(level_answer_file, 'r', encoding='utf-8') as f:
+                answer_logs = json.load(f)
+        else:
+            answer_logs = []
+        answer_logs.append(simplified_log)
+        with open(level_answer_file, 'w', encoding='utf-8') as f:
+            json.dump(answer_logs, f, indent=2, ensure_ascii=False)
+
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 
 from flask import request, jsonify
@@ -764,30 +837,46 @@ def show_level3_ranking():
 
     return render_template("level3.html", results=best_list)
 
+#프로필
+@app.route('/api/user-profile', methods=['GET'])
+def get_user_profile():
+    username = request.args.get('username')
+    if not username:
+        return jsonify({'success': False, 'message': 'ユーザー名が必要です'})
+
+    # 예시로 users.json 에서 사용자 정보를 읽는다고 가정
+    try:
+        with open('users.json', 'r', encoding='utf-8') as f:
+            users = json.load(f)
+        for user in users:
+            if user.get('username') == username:
+                return jsonify({'success': True, 'user': user})
+        return jsonify({'success': False, 'message': 'ユーザーが見つかりません'})
+    except FileNotFoundError:
+        return jsonify({'success': False, 'message': 'ユーザーファイルが存在しません'})
+
+
 
 ################################
 # API: 퀴즈 히스토리
 ################################
 
+
 @app.route('/api/quiz-history/<username>', methods=['GET'])
 def get_quiz_history(username):
-    # 全レベルのファイルを合算してユーザー履歴を取得
-    all_results = []
-    for lvl in [1, 2, 3]:
-        results = load_results_by_level(lvl)
-        all_results.extend(results)
-
-    user_results = [r for r in all_results if r.get('username') == username]
-    
-    # Sort by timestamp (newest first)
-    user_results.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
-    
-    return jsonify({'success': True, 'history': user_results})
-
-@app.route('/api/quiz-history/<username>', methods=['GET'])
-def get_quiz_history3(username):
     level = request.args.get('level')
 
+    # level 파라미터가 없는 경우 → 모든 레벨 합산
+    if not level:
+        all_results = []
+        for lvl in [1, 2, 3]:
+            results = load_results_by_level(lvl)
+            all_results.extend(results)
+        user_results = [r for r in all_results if r.get('username') == username]
+        user_results.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        return jsonify({'success': True, 'history': user_results})
+
+    # level 파라미터가 있을 경우 → 특정 레벨 필터링
     if level not in ['1', '2', '3']:
         return jsonify({'success': False, 'message': '無効なレベルです'})
 
@@ -800,15 +889,14 @@ def get_quiz_history3(username):
     filepath = file_map[level]
 
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             all_results = json.load(f)
     except FileNotFoundError:
-        return jsonify({'success': True, 'history': []})  # 파일이 없으면 빈 리스트 반환
+        return jsonify({'success': True, 'history': []})
 
-    # 해당 사용자만 필터링
-    user_results = [r for r in all_results if r['username'] == username]
-
+    user_results = [r for r in all_results if r.get('username') == username]
     return jsonify({'success': True, 'history': user_results})
+
 
 @app.route('/api/quiz-result', methods=['POST'])
 def save_quiz_result3():

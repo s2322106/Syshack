@@ -401,7 +401,7 @@
         } else {
           this.username = user;
         }
-        
+
         // Check saved language preference if any
         const savedLanguage = localStorage.getItem('quizLanguage');
         if (savedLanguage) {
@@ -411,10 +411,10 @@
       methods: {
         switchLanguage(lang) {
           this.currentLanguage = lang;
-          
+
           // Save language preference
           localStorage.setItem('quizLanguage', lang);
-          
+
           // Update translations
           if (lang === 'en') {
             this.translations = {
@@ -463,22 +463,22 @@
               menu: 'メニュー'
             };
           }
-          
+
           // If we're in a question, we need to reload the questions in the new language
           if (this.currentView === 'question' && this.currentLevel > 0) {
             this.loadQuestions(this.currentLevel);
           }
         },
-        
+
         selectLevel(level) {
           this.currentLevel = level;
           this.score = 0;
           this.loading = true;
           this.currentView = 'loading';
-          
+
           this.loadQuestions(level);
         },
-        
+
         loadQuestions(level) {
           // Fetch quiz questions for the selected level with language parameter
           fetch(`/api/quiz/${level}?lang=${this.currentLanguage}`)
@@ -488,16 +488,16 @@
                 // Store all questions
                 this.allQuestions = data.questions;
                 console.log(`Loaded ${this.allQuestions.length} questions for level ${level}`);
-                
+
                 // Shuffle all questions
                 this.availableQuestions = JSON.parse(JSON.stringify(this.allQuestions));
                 this.shuffleArray(this.availableQuestions);
-                
+
                 // Show the first question
                 this.showNextQuestion();
               } else {
-                alert(this.currentLanguage === 'ja' ? 
-                  'クイズデータの読み込みに失敗しました。' : 
+                alert(this.currentLanguage === 'ja' ?
+                  'クイズデータの読み込みに失敗しました。' :
                   'Failed to load quiz data.');
                 this.loading = false;
                 this.currentView = 'level-select';
@@ -505,14 +505,14 @@
             })
             .catch(error => {
               console.error('Error fetching questions:', error);
-              alert(this.currentLanguage === 'ja' ? 
-                'エラーが発生しました。もう一度お試しください。' : 
+              alert(this.currentLanguage === 'ja' ?
+                'エラーが発生しました。もう一度お試しください。' :
                 'An error occurred. Please try again.');
               this.loading = false;
               this.currentView = 'level-select';
             });
         },
-        
+
         // Shuffle array using Fisher-Yates algorithm
         shuffleArray(array) {
           for (let i = array.length - 1; i > 0; i--) {
@@ -520,62 +520,67 @@
             [array[i], array[j]] = [array[j], array[i]];
           }
         },
-        
+
         showNextQuestion() {
           this.loading = false;
-          
+
           // Check if we have any questions left
           if (this.availableQuestions.length === 0) {
             // All questions answered correctly!
             this.showFinalResult(true);
             return;
           }
-          
+
           // Get the next question
           this.currentQuestion = this.availableQuestions.pop();
           this.currentView = 'question';
         },
-        
+
         selectOption(index) {
+          this.selectedOptionIndex = index;
+
           const isCorrect = index === this.currentQuestion.answer;
-          
+
           if (isCorrect) {
             // Correct answer
             this.score++;
             this.currentView = 'correct';
-            
+
             // Save result
             this.saveResult(true);
           } else {
             // Wrong answer - game over
-            this.correctAnswerText = 
+            this.correctAnswerText =
               this.translations.correctAnswer + this.currentQuestion.options[this.currentQuestion.answer];
             this.allCorrect = false;
             this.currentView = 'final';
-            
+
             // Save result
             this.saveResult(false);
           }
         },
-        
+
         nextQuestion() {
           this.showNextQuestion();
         },
-        
+
         showFinalResult(allCorrect) {
           this.allCorrect = allCorrect;
           this.currentView = 'final';
         },
-        
+
         restartQuiz() {
           window.location.href = 'quiz.html';
         },
-        
+
         goToMain() {
           window.location.href = 'quiz.html';
         },
-        
+
         saveResult(isCorrect) {
+          const userAnswerText = this.currentQuestion.options[this.selectedOptionIndex];
+          const correctAnswerText = this.currentQuestion.options[this.currentQuestion.answer];
+
           fetch('/api/quiz-result', {
             method: 'POST',
             headers: {
@@ -589,7 +594,9 @@
               total: this.allQuestions.length,
               answers: [{
                 question: this.currentQuestion.question,
-                correct: isCorrect
+                correct: isCorrect,
+                userAnswer: userAnswerText,
+                correctAnswer: correctAnswerText
               }]
             })
           }).catch(error => {
@@ -598,6 +605,7 @@
         }
       }
     });
-  </script>
+</script>
+
 </body>
 </html>

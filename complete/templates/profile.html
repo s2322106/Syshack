@@ -75,6 +75,7 @@
       background-color: #f8d7da;
       color: #721c24;
     }
+
     /* Bottom Navigation */
     .bottom-nav {
       display: flex;
@@ -85,27 +86,80 @@
       left: 0;
       width: 100%;
       z-index: 1000;
+      justify-content: space-around;
+      padding: 8px 0;
     }
+
     .nav-item {
-      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 8px 0;
       color: #666;
       text-decoration: none;
+      padding: 5px 0;
+      flex-grow: 1;
+      text-align: center;
       font-size: 12px;
     }
+
     .nav-item.active {
       color: #007bff;
       border-top: 3px solid #007bff;
+      padding-top: 2px;
     }
+
     .nav-icon {
       font-size: 24px;
       margin-bottom: 4px;
     }
+
+    .quiz-button {
+      background-color: #007bff;
+      color: white;
+      border-radius: 50%;
+      width: 70px;
+      height: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: -20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+
+    .quiz-button:hover {
+      transform: scale(1.05);
+      background-color: #0069d9;
+      color: white;
+    }
+
+    .quiz-icon {
+      font-size: 28px;
+      margin-bottom: 2px;
+    }
+
+    .quiz-text {
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .bottom-nav-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      width: 100%;
+    }
+
+    .side-nav-items {
+      display: flex;
+      justify-content: space-around;
+      flex-grow: 1;
+    }
+
     .content {
-      margin-bottom: 60px; /* Space for bottom nav */
+      margin-bottom: 80px; /* Space for bottom nav */
     }
   </style>
 </head>
@@ -118,29 +172,29 @@
     <div class="content">
       <div class="container">
         <h1>プロフィール設定</h1>
-        
+
         <div class="form-group">
           <label for="username">ユーザー名</label>
           <input id="username" type="text" v-model="profile.username" placeholder="ユーザー名">
         </div>
-        
+
         <div class="form-group">
           <label for="email">メールアドレス</label>
           <input id="email" type="email" v-model="profile.email" placeholder="メールアドレス">
         </div>
-        
+
         <div class="form-group">
           <label for="current-password">現在のパスワード</label>
           <input id="current-password" type="password" v-model="currentPassword" placeholder="現在のパスワード">
         </div>
-        
+
         <div class="form-group">
           <label for="new-password">新しいパスワード（変更する場合）</label>
           <input id="new-password" type="password" v-model="newPassword" placeholder="新しいパスワード">
         </div>
-        
+
         <button @click="saveProfile">保存</button>
-        
+
         <div v-if="message" :class="['message', messageType]">
           {{ message }}
         </div>
@@ -148,25 +202,31 @@
     </div>
 
     <div class="bottom-nav">
-      
-      </a>
-      <a href="quiz.html" class="nav-item">
-        <div class="nav-icon">❓</div>
-        <div>クイズ</div>
-      </a>
-      <a href="camera.html" class="nav-item">
-        <div class="nav-icon">📷</div>
-        <div>カメラ</div>
-      </a>
-      <a href="menu.html" class="nav-item active">
-        <div class="nav-icon">☰</div>
-        <div>メニュー</div>
-      </a>
+      <div class="bottom-nav-container">
+        <div class="side-nav-items">
+          <a href="camera.html" class="nav-item">
+            <div class="nav-icon">📷</div>
+            <div>カメラ</div>
+          </a>
+        </div>
+
+        <a href="quiz.html" class="quiz-button">
+          <div class="quiz-icon">❓</div>
+          <div class="quiz-text">クイズ</div>
+        </a>
+
+        <div class="side-nav-items">
+          <a href="menu.html" class="nav-item active">
+            <div class="nav-icon">☰</div>
+            <div>メニュー</div>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const user = localStorage.getItem('username');
       if (!user) {
         window.location.href = 'index.html';
@@ -174,7 +234,7 @@
         document.getElementById('username').textContent = user;
       }
     });
-    
+
     new Vue({
       el: '#profile-app',
       data: {
@@ -188,12 +248,10 @@
         messageType: 'success'
       },
       created() {
-        // Get current user from localStorage
-        const currentUser = localStorage.getItem('currentUser');
+        const currentUser = localStorage.getItem('username');
         if (currentUser) {
           this.profile.username = currentUser;
-          
-          // Fetch user profile data
+
           fetch(`/api/user-profile?username=${currentUser}`)
             .then(response => response.json())
             .then(data => {
@@ -215,23 +273,23 @@
             this.messageType = 'error';
             return;
           }
-          
+
           if (!this.currentPassword) {
             this.message = '現在のパスワードを入力してください';
             this.messageType = 'error';
             return;
           }
-          
+
           const userData = {
             username: this.profile.username,
             email: this.profile.email,
             currentPassword: this.currentPassword
           };
-          
+
           if (this.newPassword) {
             userData.newPassword = this.newPassword;
           }
-          
+
           fetch('/api/update-profile', {
             method: 'POST',
             headers: {
@@ -239,31 +297,29 @@
             },
             body: JSON.stringify(userData)
           })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              this.message = 'プロフィールが更新されました';
-              this.messageType = 'success';
-              
-              // Update local storage if username changed
-              if (data.updatedUsername && data.updatedUsername !== localStorage.getItem('currentUser')) {
-                localStorage.setItem('currentUser', data.updatedUsername);
-                document.getElementById('username').textContent = data.updatedUsername;
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                this.message = 'プロフィールが更新されました';
+                this.messageType = 'success';
+
+                if (data.updatedUsername && data.updatedUsername !== localStorage.getItem('username')) {
+                  localStorage.setItem('username', data.updatedUsername);
+                  document.getElementById('username').textContent = data.updatedUsername;
+                }
+
+                this.currentPassword = '';
+                this.newPassword = '';
+              } else {
+                this.message = data.message || 'プロフィールの更新に失敗しました';
+                this.messageType = 'error';
               }
-              
-              // Clear password fields
-              this.currentPassword = '';
-              this.newPassword = '';
-            } else {
-              this.message = data.message || 'プロフィールの更新に失敗しました';
+            })
+            .catch(error => {
+              console.error('Error updating profile:', error);
+              this.message = 'エラーが発生しました';
               this.messageType = 'error';
-            }
-          })
-          .catch(error => {
-            console.error('Error updating profile:', error);
-            this.message = 'エラーが発生しました';
-            this.messageType = 'error';
-          });
+            });
         }
       }
     });
