@@ -124,8 +124,8 @@
           .then(response => response.json())
           .then(data => {
             if (data.success) {
-              localStorage.setItem('currentUser', this.username);
-              window.location.href = '/quiz';
+              localStorage.setItem('username', this.username);
+              window.location.href = 'main.html';
             } else {
               this.error = data.message || 'ログインに失敗しました';
             }

@@ -7,9 +7,9 @@
   <style>
     body {
       font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
       margin: 0;
       padding: 0;
-      background-color: #f4f4f4;
     }
     .header {
       background-color: #007bff;
@@ -23,7 +23,7 @@
       max-width: 800px;
       margin: 0 auto;
       padding: 20px;
-      padding-bottom: 80px; /* 下部メニューのスペース */
+      padding-bottom: 80px;
     }
     .back-icon {
       font-size: 28px;
@@ -53,19 +53,37 @@
     .history-item {
       background-color: white;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       padding: 10px;
-      width: 200px;
+      width: 220px;
       text-align: center;
+      position: relative;
     }
     .history-item img {
       width: 100%;
       border-radius: 5px;
     }
-    .translated-label {
+    .timestamp {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      font-size: 12px;
+      color: #555;
+    }
+    .object-labels {
       margin-top: 8px;
-      font-weight: bold;
+      text-align: left;
+      font-size: 14px;
       color: #333;
+    }
+    .delete-button {
+      margin-top: 8px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
     }
     .buttons {
       position: fixed;
@@ -82,7 +100,6 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       color: #007bff;
       text-decoration: none;
       font-size: 12px;
@@ -96,41 +113,105 @@
 <body>
   <div class="header">
     <div class="back-icon" onclick="location.href='menu.html'">&#x2039;</div>
-    <div class="username">ようこそ {{ username }} さん</div>
+    <div class="username">ようこそ <span id="username-display"></span> さん</div>
   </div>
 
   <div class="container">
     <h1>撮影履歴一覧</h1>
-    <div class="history-grid">
-      {% for item in camera_history %}
-        <div class="history-item">
-          <img src="{{ item.image_url }}" alt="Photo">
-          <div class="translated-label">{{ item.translation }}</div>
-        </div>
-      {% endfor %}
-      {% if camera_history|length == 0 %}
-        <p>履歴はまだありません。</p>
-      {% endif %}
+    <div class="history-grid" id="photo-history">
+      <!-- JSで表示 -->
     </div>
   </div>
 
   <div class="buttons">
     <div class="main-button" onclick="location.href='main.html'">
-      <div class="button-icon">🏠</div>
-      <div class="button-text">ホーム</div>
+      <div class="button-icon">🏠</div><div>ホーム</div>
     </div>
     <div class="main-button" onclick="location.href='quiz.html'">
-      <div class="button-icon">？</div>
-      <div class="button-text">クイズ</div>
+      <div class="button-icon">❓</div><div>クイズ</div>
     </div>
     <div class="main-button" onclick="location.href='camera.html'">
-      <div class="button-icon">📷</div>
-      <div class="button-text">カメラ</div>
+      <div class="button-icon">📷</div><div>カメラ</div>
     </div>
     <div class="main-button" onclick="location.href='menu.html'">
-      <div class="button-icon">☰</div>
-      <div class="button-text">メニュー</div>
+      <div class="button-icon">☰</div><div>メニュー</div>
     </div>
   </div>
+
+  <script>
+    const username = localStorage.getItem('username');
+    if (!username) {
+      alert("ログインが必要です");
+      window.location.href = "index.html";
+    }
+
+    document.getElementById("username-display").textContent = username;
+
+    fetch(`/api/photo-history/${username}`)
+      .then(res => res.json())
+      .then(data => {
+        const grid = document.getElementById('photo-history');
+        if (data.success) {
+          if (data.photos.length === 0) {
+            grid.innerHTML = '<p>履歴はまだありません。</p>';
+            return;
+          }
+
+          data.photos.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+
+            const date = new Date(item.timestamp);
+            const formatted = date.toLocaleString('ja-JP', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+
+            const pairedWords = item.en.map((e, i) => `${e} ${item.jp[i]}`).join(', ');
+
+            div.innerHTML = `
+              <div class="timestamp">${formatted}</div>
+              <img src="/static/photos/${item.filename}" alt="写真">
+              <div class="object-labels">
+                <strong>勉強した単語:</strong><br>${pairedWords}
+                <button class="delete-button" onclick="deletePhoto('${item.filename}', this)">🗑️ 削除</button>
+              </div>
+            `;
+            grid.appendChild(div);
+          });
+        } else {
+          grid.innerHTML = '<p>読み込みに失敗しました。</p>';
+        }
+      })
+      .catch(err => {
+        console.error("履歴取得エラー:", err);
+        document.getElementById('photo-history').innerHTML = '<p>読み込み中にエラーが発生しました。</p>';
+      });
+
+    function deletePhoto(filename, button) {
+      if (!confirm('本当にこの写真を削除しますか？')) return;
+
+      fetch('/api/delete-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            button.closest('.history-item').remove();
+          } else {
+            alert('削除に失敗しました');
+          }
+        })
+        .catch(err => {
+          console.error('削除エラー:', err);
+          alert('削除中にエラーが発生しました');
+        });
+    }
+  </script>
 </body>
 </html>

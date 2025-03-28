@@ -64,6 +64,17 @@
   </style>
 </head>
 <body>
+  <!-- ✅ 로그인 확인 로직 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const username = localStorage.getItem('username');
+      if (!username) {
+        alert("ログインしてください");
+        window.location.href = "index.html"; // 로그인 페이지로 리디렉션
+      }
+    });
+  </script>
+
   <div id="app">
     <div class="header">
       <div>📸 カメラで撮影</div>
@@ -142,10 +153,12 @@
           }, 'image/png');
         },
         sendToFlask(base64data) {
+          const username = localStorage.getItem('username') || null;
+
           fetch('/api/photo-analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: base64data })
+            body: JSON.stringify({ image: base64data, username })
           })
             .then(res => res.json())
             .then(data => {
