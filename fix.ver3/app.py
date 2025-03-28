@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, send_from_directory, request, jsonify
+from flask import Flask, render_template, send_from_directory, request, jsonify, redirect
 import json
 import os
 import random
@@ -77,6 +77,37 @@ def translate_to_japanese(english_name):
         return dictionary[english_name]
     else:
         return translate_to_japanese_deepl(english_name)
+
+# batch_translate_with_deepl
+    
+def batch_translate_with_deepl(texts, target_lang="EN"):
+    """
+    Translate multiple texts at once using DeepL API
+    """
+    if not texts:
+        return []
+        
+    try:
+        url = "https://api-free.deepl.com/v2/translate"
+        params = []
+        for text in texts:
+            params.append(("text", text))
+        
+        params.append(("auth_key", DEEPL_API_KEY))
+        params.append(("target_lang", target_lang))
+        
+        response = requests.post(url, data=params)
+        
+        if response.status_code == 200:
+            result = response.json()
+            if "translations" in result:
+                return [t["text"] for t in result["translations"]]
+        
+        print(f"Batch DeepL translation failed: {response.status_code}")
+        return texts
+    except Exception as e:
+        print(f"Error in batch DeepL translation: {e}")
+        return texts
 
 
 ################################
@@ -165,6 +196,9 @@ def load_quiz_data(level):
 def index():
     return render_template('index.html')
 
+@app.route('/main.html')
+def main():
+    return redirect('/quiz.html')
 
 @app.route('/quiz')
 def quiz():
@@ -231,7 +265,10 @@ def register_api():
 def get_quiz_questions(level):
     if level not in [1, 2, 3]:
         return jsonify({'success': False, 'message': '無効なレベルです'})
-        
+    
+    # Get the language parameter from the request (default to Japanese)
+    language = request.args.get('lang', 'ja')
+    
     quiz_data = load_quiz_data(level)
     
     # Get questions (handle different formats)
@@ -252,6 +289,64 @@ def get_quiz_questions(level):
     
     # Format the questions for the frontend
     formatted_questions = []
+    
+    # If English is requested, translate questions and options
+    if language == 'en':
+        # Create a list for all the texts to translate
+        all_texts = []  
+        # Keep track of which questions these texts belong to
+        questions_map = []
+        
+        for idx, q in enumerate(questions):
+            if 'question' not in q or ('choices' not in q and 'options' not in q):
+                continue
+                
+            # Add the question to the translation list
+            all_texts.append(q['question'])
+            
+            # Determine which options field to use and add all options
+            options_field = 'choices' if 'choices' in q else 'options'
+            options = q.get(options_field, [])
+            
+            for option in options:
+                all_texts.append(option)
+                
+            # Map information about this question
+            questions_map.append({
+                'question_idx': idx,
+                'options_field': options_field,
+                'options_count': len(options)
+            })
+                
+        # Now translate all texts in one batch if there are any
+        if all_texts:
+            try:
+                # Translate all texts at once
+                translated_texts = batch_translate_with_deepl(all_texts, 'EN')
+                
+                # Map the translations back to the questions
+                text_index = 0
+                
+                for q_map in questions_map:
+                    idx = q_map['question_idx']
+                    options_field = q_map['options_field']
+                    options_count = q_map['options_count']
+                    
+                    # Get the translated question
+                    questions[idx]['question_translated'] = translated_texts[text_index]
+                    text_index += 1
+                    
+                    # Get the translated options
+                    translated_options = []
+                    for i in range(options_count):
+                        translated_options.append(translated_texts[text_index])
+                        text_index += 1
+                        
+                    questions[idx]['options_translated'] = translated_options
+            except Exception as e:
+                print(f"Translation error: {e}")
+    
+    # Now format all questions with translations if needed
     for q in questions:
         try:
             # Skip if there are missing keys
@@ -279,14 +374,26 @@ def get_quiz_questions(level):
                 continue
             
             # Use whichever options key is available ('choices' or 'options')
-            options = q.get('choices', q.get('options', []))
-                
+            options_field = 'choices' if 'choices' in q else 'options'
+            options = q.get(options_field, [])
+            
+            # Use translated content if available and English is requested
+            question_text = q.get('question', '')
+            final_options = options
+            
+            if language == 'en':
+                if 'question_translated' in q:
+                    question_text = q['question_translated']
+                if 'options_translated' in q:
+                    final_options = q['options_translated']
+            
             formatted_questions.append({
-                'question': q['question'],
-                'options': options,
+                'question': question_text,
+                'options': final_options,
                 'answer': answer_index
             })
-        except:
+        except Exception as e:
+            print(f"Error formatting question: {e}")
             continue
     
     return jsonify({'success': True, 'questions': formatted_questions})
@@ -316,6 +423,7 @@ def save_quiz_result():
     score = data.get('score', 0)
     total = data.get('total', 50)  # Default to 50 for continuous quiz
     answers = data.get('answers', [])
+    language = data.get('language', 'ja')  # Get language but don't do any translation
     
     if level not in [1, 2, 3]:
         return jsonify({'success': False, 'message': '無効なレベルです'})
@@ -326,6 +434,7 @@ def save_quiz_result():
         'score': score,
         'total': total,
         'answers': answers,
+        'language': language,  # Store language for reference
         'timestamp': datetime.now().isoformat()
     }
 
