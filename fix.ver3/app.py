@@ -532,6 +532,11 @@ def show_level3_ranking():
 def camera_history():
     return render_template("camera_history.html")
 
+#クイズ履歴を表示
+@app.route("/quiz_history.html")
+def quiz_history():
+    return render_template("quiz_history.html")
+
 ################################
 # API: 퀴즈 히스토리
 ################################
