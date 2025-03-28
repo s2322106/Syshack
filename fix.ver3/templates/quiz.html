@@ -120,20 +120,23 @@
       left: 0;
       width: 100%;
       z-index: 1000;
+      justify-content: space-around;
+      padding: 8px 0;
     }
     .nav-item {
-      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 8px 0;
       color: #666;
       text-decoration: none;
-      font-size: 12px;
+      padding: 5px 0;
+      flex-grow: 1;
+      text-align: center;
     }
     .nav-item.active {
       color: #007bff;
       border-top: 3px solid #007bff;
+      padding-top: 2px;
     }
     .nav-icon {
       font-size: 24px;
@@ -166,6 +169,52 @@
     .current-score {
       font-weight: bold;
       color: #007bff;
+    }
+    
+    /* Quiz button styling */
+    .quiz-button {
+      background-color: #007bff;
+      color: white;
+      border-radius: 50%;
+      width: 70px;
+      height: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: -20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    
+    .quiz-button:hover {
+      transform: scale(1.05);
+      background-color: #0069d9;
+      color: white;
+    }
+    
+    .quiz-icon {
+      font-size: 28px;
+      margin-bottom: 2px;
+    }
+    
+    .quiz-text {
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .bottom-nav-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      width: 100%;
+    }
+    
+    .side-nav-items {
+      display: flex;
+      justify-content: space-around;
+      flex-grow: 1;
     }
   </style>
 </head>
@@ -230,22 +279,26 @@
   </div>
 
   <div class="bottom-nav">
-    <a href="main.html" class="nav-item">
-      <div class="nav-icon">🏠</div>
-      <div>ホーム</div>
-    </a>
-    <a href="quiz.html" class="nav-item active">
-      <div class="nav-icon">❓</div>
-      <div>クイズ</div>
-    </a>
-    <a href="camera.html" class="nav-item">
-      <div class="nav-icon">📷</div>
-      <div>カメラ</div>
-    </a>
-    <a href="menu.html" class="nav-item">
-      <div class="nav-icon">☰</div>
-      <div>メニュー</div>
-    </a>
+    <div class="bottom-nav-container">
+      <div class="side-nav-items">
+        <a href="camera.html" class="nav-item">
+          <div class="nav-icon">📷</div>
+          <div>カメラ</div>
+        </a>
+      </div>
+      
+      <a href="quiz.html" class="quiz-button">
+        <div class="quiz-icon">❓</div>
+        <div class="quiz-text">クイズ</div>
+      </a>
+      
+      <div class="side-nav-items">
+        <a href="menu.html" class="nav-item">
+          <div class="nav-icon">☰</div>
+          <div>メニュー</div>
+        </a>
+      </div>
+    </div>
   </div>
 
   <script>
