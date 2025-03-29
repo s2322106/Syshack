@@ -5,7 +5,6 @@
   <title>クイズランキング</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <style>
     body {
       font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -153,8 +152,8 @@
   <div id="app">
     <div class="header d-flex justify-content-between align-items-center">
       <div class="back-icon" onclick="location.href='menu.html'">&#x2039;</div>
-      <div class="fs-5">ようこそ <span class="fw-bold">{{ username }}</span> さん</div>
-    </div>
+      <div>ようこそ <span>${ username }$</span> さん</div>
+    </div>        
 
     <div class="container level-content">
       <h2 class="text-center page-title">クイズのレベルを選択</h2>
@@ -217,14 +216,27 @@
       </div>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 
   <script>
     new Vue({
       el: "#app",
+      delimiters: ["${", "}$"],
       data: {
-        username: localStorage.getItem("username") || "ゲスト",
-        selectedLevel: null
-      },
+        username: "", // ここでユーザー名を保持
+        selectedLevel: null // 選択されたレベル
+     },
+      created() {
+          console.log('✅ delimiters:', this.$options.delimiters);
+          const currentUser = localStorage.getItem('username');
+          console.log('✅ localStorage:', currentUser);
+          if (!currentUser) {
+            window.location.href = 'index.html';  // ログインしていない場合、index.html にリダイレクト
+          } else {
+            this.username = currentUser;  // ユーザー名を表示
+            console.log('✅ ユーザー名:', this.username);
+          }
+        },
       methods: {
         redirectToLevel(level) {
           window.location.href = "/ranking/" + level;

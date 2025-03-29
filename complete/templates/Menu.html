@@ -149,7 +149,7 @@
 <body>
   <div id="app">
     <div class="header d-flex justify-content-between align-items-center">
-      <div class="fs-5">ようこそ <span class="fw-bold">{{ username }}</span> さん</div>
+      <div>ようこそ <span>{ username }$</span> さん</div>
     </div>
 
     <div class="bottom-nav">
@@ -228,6 +228,7 @@
   <script>
     new Vue({
       el: '#app',
+      delimiters: ["{", "}$"],
       data: {
         username: ''
       },
