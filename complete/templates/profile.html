@@ -161,11 +161,27 @@
     .content {
       margin-bottom: 80px; /* Space for bottom nav */
     }
+
+    .back-icon {
+      font-size: 28px;
+      font-weight: bold;
+      margin-right: 16px;
+      cursor: pointer;
+      background-color: white;
+      color: #007bff;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
   <div id="profile-app">
     <div class="header">
+      <div class="back-icon" onclick="location.href='menu.html'">&#x2039;</div>
       <div>ようこそ <span id="username"></span> さん</div>
     </div>
 
