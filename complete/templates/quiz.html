@@ -11,28 +11,15 @@
       margin: 0;
       padding: 0;
       font-family: Arial, sans-serif;
-      background-color: #808080 !important; /* Gray background */
+      background-color: #808080; /* Gray background */
     }
     body {
       display: flex;
       flex-direction: column;
       position: relative;
-      overflow-x: hidden;
     }
-    
-    /* Canvas for the petals */
-    #sakura-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0; /* Behind content */
-      pointer-events: none;
-    }
-    
     .header {
-      background-color: rgba(128, 128, 128, 0.8); /* Semi-transparent gray */
+      background-color: #808080; /* Gray header */
       color: white;
       padding: 10px 15px;
       display: flex;
@@ -40,8 +27,6 @@
       align-items: center;
       position: relative;
       z-index: 2;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(5px);
     }
     .content {
       flex: 1;
@@ -57,43 +42,17 @@
       margin: 10px 0;
       color: white;
       position: relative;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      z-index: 2;
     }
-    
-    /* Add floating petals behind text effect */
-    .title::before {
-      content: "";
-      position: absolute;
-      top: -5px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 20px;
-      height: 20px;
-      background: linear-gradient(120deg, rgba(255, 183, 197, 0.6), rgba(255, 197, 208, 0.6));
-      border-radius: 12px 1px;
-      z-index: -1;
-      filter: blur(1px);
-      animation: floatTitle 10s infinite ease-in-out;
-    }
-    
-    @keyframes floatTitle {
-      0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-      25% { transform: translateX(-55%) translateY(-3px) rotate(5deg); }
-      50% { transform: translateX(-45%) translateY(3px) rotate(10deg); }
-      75% { transform: translateX(-52%) translateY(-2px) rotate(8deg); }
-    }
-    
     .quiz-container {
-      background-color: rgba(255, 255, 255, 0.85);
-      border-radius: 15px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       padding: 20px;
       margin-bottom: 20px;
       position: relative;
-      overflow: hidden;
-      backdrop-filter: blur(5px);
+      z-index: 2;
     }
-    
     .level-select {
       display: flex;
       flex-direction: column;
@@ -102,61 +61,32 @@
       margin: 20px 0;
     }
     .level-button {
-      background-color: #8a8a8a; /* Slightly lighter gray button */
+      background-color: #808080; /* Gray button */
       color: white;
       border: none;
-      padding: 16px 30px;
-      border-radius: 12px;
+      padding: 12px 24px;
+      border-radius: 5px;
       font-size: 16px;
       cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
+      width: 80%;
+      max-width: 280px;
     }
-    
-    /* Add petal effect to buttons */
-    .level-button::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 150%;
-      height: 150%;
-      background: radial-gradient(circle, rgba(255, 183, 197, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
-      transform: translate(-50%, -50%) scale(0);
-      border-radius: 50%;
-      transition: transform 0.5s ease;
-      z-index: -1;
-    }
-    
-    .level-button:hover::before {
-      transform: translate(-50%, -50%) scale(1);
-    }
-    
     .level-button:hover {
-      background-color: #707070; /* Darker on hover */
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+      background-color: #707070; /* Darker gray on hover */
     }
     .question-text {
       font-size: 18px;
       margin-bottom: 20px;
     }
     .option {
-      background-color: rgba(248, 249, 250, 0.9);
+      background-color: #f8f9fa;
       padding: 12px;
       margin: 8px 0;
-      border-radius: 10px;
+      border-radius: 5px;
       cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-      z-index: 1;
     }
     .option:hover {
       background-color: #e9ecef;
-      transform: translateX(5px);
     }
     .result {
       font-size: 20px;
@@ -174,40 +104,10 @@
       background-color: #808080; /* Gray button */
       color: white;
       border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
+      padding: 10px 20px;
+      border-radius: 5px;
       cursor: pointer;
       margin: 5px;
-      font-weight: bold;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    /* Add petal effect to regular buttons */
-    .button::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 150%;
-      height: 150%;
-      background: radial-gradient(circle, rgba(255, 183, 197, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
-      transform: translate(-50%, -50%) scale(0);
-      border-radius: 50%;
-      transition: transform 0.5s ease;
-      z-index: -1;
-    }
-    
-    .button:hover::before {
-      transform: translate(-50%, -50%) scale(1);
-    }
-    
-    .button:hover {
-      background-color: #707070; /* Darker on hover */
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
     }
     .buttons-container {
       display: flex;
@@ -228,8 +128,8 @@
     /* Bottom Navigation */
     .bottom-nav {
       display: flex;
-      background-color: rgba(255, 255, 255, 0.85);
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+      background-color: white;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
       position: fixed;
       bottom: 0;
       left: 0;
@@ -237,7 +137,6 @@
       z-index: 1000;
       justify-content: space-around;
       padding: 8px 0;
-      backdrop-filter: blur(5px);
     }
     .nav-item {
       display: flex;
@@ -299,30 +198,9 @@
       align-items: center;
       justify-content: center;
       margin-top: -20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       text-decoration: none;
       transition: all 0.3s;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    /* Add petal effect to quiz button */
-    .quiz-button::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 150%;
-      height: 150%;
-      background: radial-gradient(circle, rgba(255, 183, 197, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
-      transform: translate(-50%, -50%) scale(0);
-      border-radius: 50%;
-      transition: transform 0.5s ease;
-      z-index: 0;
-    }
-    
-    .quiz-button:hover::before {
-      transform: translate(-50%, -50%) scale(1);
     }
     
     .quiz-button:hover {
@@ -334,15 +212,12 @@
     .quiz-icon {
       font-size: 28px;
       margin-bottom: 2px;
-      position: relative;
-      z-index: 1;
+      color: red; /* Red question mark */
     }
     
     .quiz-text {
       font-size: 12px;
       font-weight: bold;
-      position: relative;
-      z-index: 1;
     }
     
     .bottom-nav-container {
@@ -381,12 +256,14 @@
       font-weight: bold;
     }
     
-    /* Sakura petal */
-    .petal {
-      position: absolute;
-      background-color: #ffb7c5;
-      border-radius: 150% 0 150% 0;
-      transform-origin: center;
+    /* Canvas for sakura petals */
+    #sakura-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
       pointer-events: none;
     }
   </style>
@@ -505,109 +382,98 @@
   </div>
 
   <script>
-    // Initialize Sakura animation 
-    function initSakura() {
+    // Simple Sakura Animation
+    document.addEventListener('DOMContentLoaded', function() {
       const canvas = document.getElementById('sakura-canvas');
       const ctx = canvas.getContext('2d');
       
-      // Set canvas dimensions
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       
-      // Handle resizing
-      window.addEventListener('resize', () => {
+      window.addEventListener('resize', function() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
       });
       
-      // Petal class
-      class Petal {
-        constructor() {
-          this.x = Math.random() * canvas.width;
-          this.y = -10;
-          this.size = Math.random() * 8 + 5;
-          this.speedX = Math.random() * 2 - 1;
-          this.speedY = Math.random() * 1 + 0.5;
-          this.rotation = Math.random() * 360;
-          this.rotationSpeed = Math.random() * 2 - 1;
-          this.opacity = Math.random() * 0.5 + 0.3;
-          this.color = Math.random() < 0.3 ? 
-            {r: 255, g: 183, b: 197} : 
-            {r: 255, g: 197, b: 208};
-        }
-        
-        update() {
-          this.x += this.speedX + Math.sin(this.y * 0.01) * 0.5;
-          this.y += this.speedY;
-          this.rotation += this.rotationSpeed;
-          
-          if (this.y > canvas.height) {
-            this.opacity -= 0.02;
-          }
-          
-          return this.opacity > 0;
-        }
-        
-        draw() {
-          ctx.save();
-          ctx.translate(this.x, this.y);
-          ctx.rotate(this.rotation * Math.PI / 180);
-          
-          // Simple petal shape
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.bezierCurveTo(
-            this.size / 2, -this.size / 2,
-            this.size, 0,
-            0, this.size
-          );
-          ctx.bezierCurveTo(
-            -this.size, 0,
-            -this.size / 2, -this.size / 2,
-            0, 0
-          );
-          
-          // Fill with color
-          ctx.fillStyle = `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.opacity})`;
-          ctx.fill();
-          
-          ctx.restore();
-        }
-      }
-      
-      // Petals array
       const petals = [];
       const maxPetals = 10;
       
-      // Animation loop
+      function createPetal() {
+        return {
+          x: Math.random() * canvas.width,
+          y: -10,
+          size: Math.random() * 8 + 5,
+          speedX: Math.random() * 2 - 1,
+          speedY: Math.random() * 1 + 0.5,
+          rotation: Math.random() * 360,
+          rotationSpeed: Math.random() * 2 - 1,
+          opacity: Math.random() * 0.5 + 0.3,
+          color: {r: 255, g: 183, b: 197} // Pink color
+        };
+      }
+      
       function animate() {
-        // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Add new petal occasionally
         if (petals.length < maxPetals && Math.random() < 0.02) {
-          petals.push(new Petal());
+          petals.push(createPetal());
         }
         
-        // Update and draw petals
         for (let i = petals.length - 1; i >= 0; i--) {
-          if (!petals[i].update()) {
-            petals.splice(i, 1);
-          } else {
-            petals[i].draw();
+          const p = petals[i];
+          
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.rotation += p.rotationSpeed;
+          
+          if (p.y > canvas.height) {
+            p.opacity -= 0.02;
           }
+          
+          if (p.opacity <= 0) {
+            petals.splice(i, 1);
+            continue;
+          }
+          
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.opacity})`;
+          
+          // Petal shape - curved on one side, pointed on the other
+          const size = p.size;
+          ctx.moveTo(0, 0);
+          ctx.bezierCurveTo(
+            size / 2, -size / 2,
+            size, -size / 4,
+            size, size / 2
+          );
+          ctx.bezierCurveTo(
+            size, size,
+            size / 2, size,
+            0, size / 2
+          );
+          ctx.bezierCurveTo(
+            -size / 2, size,
+            -size, size,
+            -size, size / 2
+          );
+          ctx.bezierCurveTo(
+            -size, -size / 4,
+            -size / 2, -size / 2,
+            0, 0
+          );
+          
+          ctx.fill();
+          ctx.restore();
         }
         
         requestAnimationFrame(animate);
       }
       
-      // Start animation
       animate();
-    }
-    
-    // Initialize sakura animation on load
-    document.addEventListener('DOMContentLoaded', function() {
-      initSakura();
     });
 
     new Vue({
@@ -861,84 +727,6 @@
           });
         }
       }
-    });
-  </script>
-
-  <!-- Add accent petals script -->
-  <script>
-    // Add subtle accent petals to quiz containers
-    function addAccentPetals() {
-      const containers = document.querySelectorAll('.quiz-container');
-      
-      // Add petals to each container
-      containers.forEach(container => {
-        // Add one petal near the bottom
-        if (Math.random() > 0.3) {
-          const petal = document.createElement('div');
-          petal.className = 'accent-petal';
-          
-          // Subtle styling
-          const size = Math.random() * 8 + 5;
-          const opacity = Math.random() * 0.1 + 0.05;
-          
-          petal.style.width = `${size}px`;
-          petal.style.height = `${size}px`;
-          petal.style.position = 'absolute';
-          petal.style.bottom = `${5 + Math.random() * 10}%`;
-          petal.style.right = `${30 + Math.random() * 40}%`;
-          petal.style.background = `linear-gradient(120deg, rgba(255, 183, 197, ${opacity}), rgba(255, 197, 208, ${opacity}))`;
-          petal.style.borderRadius = '12px 1px';
-          petal.style.transform = `rotate(${Math.random() * 30}deg)`;
-          petal.style.zIndex = '0';
-          petal.style.pointerEvents = 'none';
-          
-          // Gentle animation
-          petal.style.animation = `float ${10 + Math.random() * 5}s infinite ease-in-out`;
-          
-          container.insertBefore(petal, container.firstChild);
-        }
-        
-        // Occasionally add a second petal in a different position
-        if (Math.random() > 0.6) {
-          const petal2 = document.createElement('div');
-          petal2.className = 'accent-petal';
-          
-          const size2 = Math.random() * 6 + 4;
-          const opacity2 = Math.random() * 0.1 + 0.05;
-          
-          petal2.style.width = `${size2}px`;
-          petal2.style.height = `${size2}px`;
-          petal2.style.position = 'absolute';
-          petal2.style.top = `${70 + Math.random() * 20}%`;
-          petal2.style.left = `${10 + Math.random() * 20}%`;
-          petal2.style.background = `linear-gradient(120deg, rgba(255, 183, 197, ${opacity2}), rgba(255, 197, 208, ${opacity2}))`;
-          petal2.style.borderRadius = '12px 1px';
-          petal2.style.transform = `rotate(${Math.random() * 30}deg)`;
-          petal2.style.zIndex = '0';
-          petal2.style.pointerEvents = 'none';
-          
-          petal2.style.animation = `float ${12 + Math.random() * 5}s infinite ease-in-out`;
-          
-          container.insertBefore(petal2, container.firstChild);
-        }
-      });
-    }
-    
-    // Observer to add accent petals when the view changes
-    document.addEventListener('DOMContentLoaded', function() {
-      const app = document.getElementById('app');
-      
-      // Create observer to watch for DOM changes
-      const observer = new MutationObserver(() => {
-        // Add accent petals with slight delay to ensure containers are rendered
-        setTimeout(addAccentPetals, 100);
-      });
-      
-      // Start observing
-      observer.observe(app, { childList: true, subtree: true });
-      
-      // Initial call
-      setTimeout(addAccentPetals, 500);
     });
   </script>
 </body>

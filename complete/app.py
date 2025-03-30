@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, send_from_directory, request, jsonify
 import json
 import os
@@ -9,24 +8,16 @@ from datetime import datetime
 from google.cloud import vision
 import requests
 from flask import request
-from google.cloud import translate
 
 app = Flask(__name__, static_folder='static')
 
-
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "vision_key.json"
-
-PHOTO_SAVE_DIR = 'static/photos'
-PHOTO_RESULTS_PATH = 'photo_results.json'
-
-
+# Google Vision API 설정
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(BASE_DIR, "vision_key.json")
 
-
-  # 서비스 계정 키 경로
-DEEPL_API_KEY = "a6da533c-6070-4fb0-a6f4-7e2f57af830b"
-GOOGLE_VISION_PUBLIC_KEY = "a6da533c-6070-4fb0-a6f4-7e2f57af830b:fx"
+# 파일 경로 설정
+PHOTO_SAVE_DIR = 'static/photos'
+PHOTO_RESULTS_PATH = 'photo_results.json'
 
 # Flask 앱 생성
 app = Flask(
@@ -43,85 +34,77 @@ PHOTO_RESULTS_PATH = os.path.join(BASE_DIR, 'photo_results.json')
 
 USERS_JSON_PATH = os.path.join(BASE_DIR, 'users.json')
 
-# ※ 以下3つのJSONファイルは、レベルごとにクイズ結果を格納するために用意したもの
+# 퀴즈 결과 저장 경로
 LEVEL1_RESULTS_JSON_PATH = os.path.join(BASE_DIR, 'level1_results.json')
 LEVEL2_RESULTS_JSON_PATH = os.path.join(BASE_DIR, 'level2_results.json')
 LEVEL3_RESULTS_JSON_PATH = os.path.join(BASE_DIR, 'level3_results.json')
 
+# 퀴즈 데이터 경로
 LEVEL1_QUIZ_PATH = os.path.join(STATIC_DIR, 'level1_quiz_full_50.json')
 LEVEL2_QUIZ_PATH = os.path.join(STATIC_DIR, 'level2_quiz_full_50.json')
 LEVEL3_QUIZ_PATH = os.path.join(STATIC_DIR, 'level3_quiz_full_50.json')
 
+# 디렉토리 생성
 os.makedirs(PHOTO_SAVE_DIR, exist_ok=True)
 
-import requests
-
-# DeepL 번역 함수 (에러 핸들링 포함)
-def translate_to_japanese_deepl(english_name):
-    if not DEEPL_API_KEY or DEEPL_API_KEY.strip() == "":
-        print("❌ DeepL APIキーが設定されていません。")
-        return english_name + "（翻訳エラー）"
-
-    try:
-        url = "https://api-free.deepl.com/v2/translate"
-        params = {
-            "auth_key": DEEPL_API_KEY,
-            "text": english_name,
-            "target_lang": "JA"
-        }
-        response = requests.post(url, data=params)
-
-        if response.status_code != 200:
-            print(f"❌ DeepL APIエラー: {response.status_code} - {response.text}")
-            return english_name + "（翻訳失敗）"
-
-        result = response.json()
-        translated_text = result["translations"][0]["text"]
-        return translated_text
-
-    except Exception as e:
-        print("❌ DeepL翻訳処理中に例外が発生しました:", e)
-        return english_name + "（翻訳エラー）"
-
-# 기존 사전 + DeepL 사용
-def translate_to_japanese(english_name):
-    dictionary = {
-        "Bottle": "ボトル",
-        "Chair": "椅子",
-        "Table": "テーブル",
-        "Book": "本"
-    }
-
-    if english_name in dictionary:
-        return dictionary[english_name]
-    else:
-        return translate_to_japanese_deepl(english_name)
-
-# from google.cloud import translate_v2 as translate
-
-@app.route('/index.html')
-def index_html():
-    return render_template('index.html')
-
-
-@app.route('/api/google-translate', methods=['POST'])
-def google_translate():
-    try:
-        from google.cloud import translate_v2 as translate
-        client = translate.Client()
-        
-        data = request.get_json()
-        text = data.get('text', '')
-        
-        result = client.translate(text, target_language='ja')
-        translated = result['translatedText']
-        
-        return jsonify({'translated_text': translated})
+# 간단한 번역 사전 (영어↔일본어)
+TRANSLATION_DICT = {
+    # General dictionary
+    "Quiz": "クイズ",
+    "Loading...": "読み込み中...",
+    "Select Level": "レベルを選択してください",
+    "Level 1": "レベル 1",
+    "Level 2": "レベル 2", 
+    "Level 3": "レベル 3",
+    "Continuous Mode: Keep playing until you make a mistake!": "連続モード: 間違えるまで挑戦できます！",
+    "Score": "スコア",
+    "Correct!": "正解です！",
+    "Sorry! Incorrect answer": "残念！不正解です",
+    "Next Question": "次の問題",
+    "Finish": "終了する",
+    "Quiz Complete": "クイズ終了",
+    "Final Score": "最終スコア",
+    "Try Again": "もう一度",
+    "Congratulations! All answers correct!": "おめでとう！全問正解です！",
+    "Correct answer:": "正解:",
+    "Camera": "カメラ",
+    "Menu": "メニュー",
     
-    except Exception as e:
-        print("翻訳エラー:", e)
-        return jsonify({'translated_text': '翻訳失敗'})
+    # Common quiz questions and answers
+    "What is Japan's traditional paper?": "日本の伝統的な紙は？",
+    "Copy paper": "コピー用紙",
+    "Washi": "和紙",
+    "Newspaper": "新聞紙",
+    "Tissue paper": "障子紙",
+    
+    "What do children typically receive during New Year in Japan?": "お正月に子どもがもらうおこづかいは？",
+    "Otoshidama": "お年玉",
+    "Bonus": "ボーナス",
+    "Pocket money": "おこづかい",
+    "Money offering": "お祝い金",
+    
+    "What is the traditional Japanese folding art?": "折り紙でよく作る動物は？",
+    "Dog": "犬",
+    "Cat": "猫",
+    "Crane": "鶴",
+    "Fish": "魚",
+    
+    # Add more translations as needed
+}
 
+# 영어를 일본어로 번역
+def translate_to_japanese(english_text):
+    if english_text in TRANSLATION_DICT:
+        return TRANSLATION_DICT[english_text]
+    return english_text
+
+# 일본어를 영어로 번역
+def translate_to_english(japanese_text):
+    # 역방향 사전 생성
+    reverse_dict = {v: k for k, v in TRANSLATION_DICT.items()}
+    if japanese_text in reverse_dict:
+        return reverse_dict[japanese_text]
+    return japanese_text
 
 ################################
 # JSON 파일 읽기/쓰기
@@ -165,7 +148,7 @@ def register_user():
 
     return jsonify({'status': 'success'})
 
-# ★ レベルごとに結果を読み書きする新しい関数を用意 ★
+# レベルごとに結果を読み書きする関数
 def load_results_by_level(level):
     """指定レベルの結果ファイルをロード"""
     if level == 1:
@@ -227,6 +210,10 @@ def load_quiz_data(level):
 
 @app.route('/')
 def index():
+    return render_template('index.html')
+
+@app.route('/index.html')
+def index_html():
     return render_template('index.html')
 
 @app.route('/main.html')
@@ -299,9 +286,6 @@ def register_api():
         return jsonify({'success': False, 'message': 'ユーザー登録中にエラーが発生しました'})
 
 
-from flask import request, jsonify
-import json
-
 @app.route('/api/update-profile', methods=['POST'])
 def update_profile():
     data = request.get_json()
@@ -348,7 +332,10 @@ def update_profile():
 def get_quiz_questions(level):
     if level not in [1, 2, 3]:
         return jsonify({'success': False, 'message': '無効なレベルです'})
-        
+    
+    # Get language parameter - default to Japanese
+    lang = request.args.get('lang', 'ja')
+    
     quiz_data = load_quiz_data(level)
     
     # Get questions (handle different formats)
@@ -397,13 +384,26 @@ def get_quiz_questions(level):
             
             # Use whichever options key is available ('choices' or 'options')
             options = q.get('choices', q.get('options', []))
-                
+            
+            question_text = q['question']
+            option_texts = options.copy()
+            
+            # Translate if language is English
+            if lang == 'en':
+                # Try to translate the question and options using our dictionary
+                question_text = translate_to_english(question_text)
+                translated_options = []
+                for option in option_texts:
+                    translated_options.append(translate_to_english(option))
+                option_texts = translated_options
+            
             formatted_questions.append({
-                'question': q['question'],
-                'options': options,
+                'question': question_text,
+                'options': option_texts,
                 'answer': answer_index
             })
-        except:
+        except Exception as e:
+            print(f"Error formatting question: {e}")
             continue
     
     return jsonify({'success': True, 'questions': formatted_questions})
@@ -425,100 +425,29 @@ def quiz_history():
 def profile():
     return render_template('profile.html')
 
-from datetime import datetime
-import os, json
-from flask import request, jsonify
-
-@app.route('/api/quiz-result', methods=['POST'])
-def save_quiz_result2():
-    data = request.get_json()
-    level = data.get('level')
-    username = data.get('username')
-    score = data.get('score', 0)
-    total = data.get('total', 50)
-    answers = data.get('answers', [])
-    overall_timestamp = datetime.now().isoformat()
-
-    if level not in [1, 2, 3]:
-        return jsonify({'success': False, 'message': '無効なレベルです'})
-
-    # ✅ 전체 점수 결과 저장용
-    result = {
-        'username': username,
-        'level': level,
-        'score': score,
-        'total': total,
-        'answers': answers,
-        'timestamp': overall_timestamp
-    }
-
-    # ✅ 단순화된 답안 기록용 (timestamp 추가)
-    simplified_answers = []
-    for ans in answers:
-        simplified_answers.append({
-            'question': ans.get('question'),
-            'userAnswer': ans.get('userAnswer'),
-            'correctAnswer': ans.get('correctAnswer'),
-            'correct': ans.get('correct'),
-            'timestamp': overall_timestamp
-        })
-
-    simplified_log = {
-        'username': username,
-        'answers': simplified_answers
-    }
-
-    level_result_file = f'level{level}_results.json'
-    level_answer_file = f'answerlv{level}.json'
-
-    try:
-        # 결과 저장
-        if os.path.exists(level_result_file):
-            with open(level_result_file, 'r', encoding='utf-8') as f:
-                results = json.load(f)
-        else:
-            results = []
-        results.append(result)
-        with open(level_result_file, 'w', encoding='utf-8') as f:
-            json.dump(results, f, indent=2, ensure_ascii=False)
-
-        # 단순화된 오답 저장
-        if os.path.exists(level_answer_file):
-            with open(level_answer_file, 'r', encoding='utf-8') as f:
-                answer_logs = json.load(f)
-        else:
-            answer_logs = []
-        answer_logs.append(simplified_log)
-        with open(level_answer_file, 'w', encoding='utf-8') as f:
-            json.dump(answer_logs, f, indent=2, ensure_ascii=False)
-
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-
-
-from flask import request, jsonify
-from datetime import datetime
-
 @app.route('/api/quiz-result', methods=['POST'])
 def save_quiz_result():
     data = request.get_json()
     level = data.get('level')
     username = data.get('username')
     score = data.get('score', 0)
-    total = data.get('total', 50)  # Default to 50
+    total = data.get('total', 50)
     answers = data.get('answers', [])
+    language = data.get('language', 'ja')  # Language parameter
+    overall_timestamp = datetime.now().isoformat()
 
     if level not in [1, 2, 3]:
         return jsonify({'success': False, 'message': '無効なレベルです'})
 
+    # Quiz result
     result = {
         'username': username,
         'level': level,
         'score': score,
         'total': total,
-        'answers': answers,  # userAnswer, correctAnswer, correct 포함된 상태로
-        'timestamp': datetime.now().isoformat()
+        'answers': answers,
+        'language': language,
+        'timestamp': overall_timestamp
     }
 
     results = load_results_by_level(level)
@@ -528,9 +457,6 @@ def save_quiz_result():
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'message': '結果の保存中にエラーが発生しました'})
-
-
-
 
 ################################
 # API: 퀴즈 랭킹
@@ -639,7 +565,7 @@ def camera_history1():
         with open(PHOTO_RESULTS_PATH, 'r', encoding='utf-8') as f:
             raw_data = json.load(f)
 
-        # DeepL 번역 적용 및 날짜 정렬
+        # 번역 적용 및 날짜 정렬
         for item in raw_data:
             item['image_url'] = '/static/photos/' + item['filename']
 
@@ -680,7 +606,6 @@ def photo_history_by_user(username):
         return jsonify({'success': True, 'photos': user_data})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e), 'photos': []})
-
 
 
 @app.route('/camera_history.html')
@@ -854,6 +779,8 @@ def get_user_profile():
         return jsonify({'success': False, 'message': 'ユーザーが見つかりません'})
     except FileNotFoundError:
         return jsonify({'success': False, 'message': 'ユーザーファイルが存在しません'})
+    except FileNotFoundError:
+        return jsonify({'success': False, 'message': 'ユーザーファイルが存在しません'})
 
 
 
@@ -898,38 +825,6 @@ def get_quiz_history(username):
     return jsonify({'success': True, 'history': user_results})
 
 
-@app.route('/api/quiz-result', methods=['POST'])
-def save_quiz_result3():
-    data = request.get_json()
-    username = data.get('username')
-    level = str(data.get('level'))
-
-    if level not in ['1', '2', '3']:
-        return jsonify({'success': False, 'message': '無効なレベルです'})
-
-    filename = f'level{level}_results.json'
-
-    new_entry = {
-        'username': username,
-        'score': data.get('score'),
-        'level': level,
-        'timestamp': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-        'answers': data.get('answers', [])
-    }
-
-    try:
-        with open(filename, 'r') as f:
-            all_data = json.load(f)
-    except FileNotFoundError:
-        all_data = []
-
-    all_data.append(new_entry)
-
-    with open(filename, 'w') as f:
-        json.dump(all_data, f, indent=2, ensure_ascii=False)
-
-    return jsonify({'success': True})
-
 ################################
 # API: 사진 인식 및 저장
 ################################
@@ -939,6 +834,7 @@ def photo_analyze():
     try:
         data = request.get_json()
         image_data = data.get('image')
+        username = data.get('username')
 
         if not image_data:
             return jsonify({'success': False, 'message': '画像がありません'}), 400
@@ -961,16 +857,25 @@ def photo_analyze():
         if not objects:
             return jsonify({'success': False, 'message': '物体が検出されませんでした'})
 
-        
-        object_names = [obj.name for obj in objects]
-        translated_names = [translate_to_japanese(name) for name in object_names]
-        username = data.get('username')
+        # 객체 감지 및 번역
+        object_info = []
+        for obj in objects:
+            object_name = obj.name
+            object_info.append({
+                'name': object_name,
+                'translated_name': translate_to_japanese(object_name),
+                'score': obj.score,
+                'boundingPoly': {
+                    'normalizedVertices': [
+                        {'x': v.x, 'y': v.y} for v in obj.bounding_poly.normalized_vertices
+                    ]
+                }
+            })
         
         result_data = {
             "filename": filename,
-            "en": object_names,
-            "jp": translated_names,
-            "username" :username ,
+            "username": username,
+            "objects": object_info,
             "timestamp": datetime.now().isoformat()
         }
 
@@ -978,20 +883,11 @@ def photo_analyze():
 
         return jsonify({
             'success': True,
-            'en': object_names,
-            'jp': translated_names,
-            'objects': [{
-                'name': obj.name,
-                'boundingPoly': {
-                    'normalizedVertices': [
-                        {'x': v.x, 'y': v.y} for v in obj.bounding_poly.normalized_vertices
-                    ]
-                },
-                'score': obj.score
-            } for obj in objects]
+            'objects': object_info
         })
 
     except Exception as e:
+        print(f"Error in photo analysis: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
@@ -1009,28 +905,6 @@ def photo_history():
         return jsonify({'success': False, 'message': str(e), 'photos': []})
 
 
-def translate_to_japanese(english_name):
-    dictionary = {
-        "Bottle": "ボトル",
-        "Chair": "椅子",
-        "Table": "テーブル",
-        "Book": "本"
-    }
-    if english_name in dictionary:
-        return dictionary[english_name]
-
-    # fallback: call Google Translate API
-    try:
-        from google.cloud import translate_v2 as translate
-        client = translate.Client()
-        result = client.translate(english_name, target_language='ja')
-        return result['translatedText']
-    except Exception as e:
-        print("翻訳エラー:", e)
-        return english_name + "（翻訳）"
-
-
-
 def save_photo_result(entry):
     try:
         if os.path.exists(PHOTO_RESULTS_PATH):
@@ -1045,16 +919,7 @@ def save_photo_result(entry):
             json.dump(data, f, ensure_ascii=False, indent=2)
 
     except Exception as e:
-        print("保存エラー:", e)
-
-
-################################
-# API: Google Visionキーを取得
-################################
-
-@app.route('/api/get-vision-key', methods=['GET'])
-def get_vision_key():
-    return jsonify({'visionKey': GOOGLE_VISION_PUBLIC_KEY})
+        print(f"保存エラー: {e}")
 
 
 ################################
@@ -1064,6 +929,30 @@ def get_vision_key():
 @app.route('/static/<path:path>')
 def serve_static(path):
     return send_from_directory(app.static_folder, path)
+
+
+################################
+# API: 간단한 번역 API - 외부 API 대신
+################################
+
+@app.route('/api/translate', methods=['POST'])
+def translate_api():
+    data = request.get_json()
+    text = data.get('text', '')
+    target_language = data.get('target_language', 'ja')  # default to Japanese
+    
+    if not text:
+        return jsonify({'success': False, 'message': '翻訳テキストがありません'})
+    
+    try:
+        if target_language == 'ja':
+            translated_text = translate_to_japanese(text)
+        else:
+            translated_text = translate_to_english(text)
+        
+        return jsonify({'success': True, 'translated_text': translated_text})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'翻訳エラー: {str(e)}'})
 
 
 ################################
@@ -1080,7 +969,4 @@ if __name__ == '__main__':
         elif level == 3 and not os.path.exists(LEVEL3_RESULTS_JSON_PATH):
             save_results_by_level(3, [])
     
-    # 적절히 포트 번호나 호스트 설정
-
     app.run(host='0.0.0.0', port=5001, debug=True)
-
