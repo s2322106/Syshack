@@ -1,0 +1,306 @@
+[
+  {
+    "username": "admin",
+    "level": 2,
+    "score": 4,
+    "total": 5,
+    "answers": [
+      {
+        "question": "たくあんは何の漬物ですか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "俳句の基本の音数は何ですか？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "三味線はどんな楽器ですか？",
+        "userAnswer": 1,
+        "correctAnswer": 0,
+        "correct": false
+      },
+      {
+        "question": "日本で一番長い川は何ですか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "羽子板を使う伝統的な遊びの名前は何ですか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-26T12:14:44.768057"
+  },
+  {
+    "username": "admin",
+    "level": 2,
+    "score": 5,
+    "total": 5,
+    "answers": [
+      {
+        "question": "たくあんは何の漬物ですか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "三味線はどんな楽器ですか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "七夕に願いごとを書くのは何というものですか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      },
+      {
+        "question": "日本の書道で使う主要な道具はどれですか？",
+        "userAnswer": 1,
+        "correctAnswer": 1,
+        "correct": true
+      },
+      {
+        "question": "日本で最も北にある都道府県はどこですか？",
+        "userAnswer": 0,
+        "correctAnswer": 0,
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T12:20:43.162562"
+  },
+  {
+    "username": "admin",
+    "level": 2,
+    "score": 0,
+    "total": 5,
+    "answers": [
+      {
+        "question": "日本の有名な温泉地のひとつはどこですか？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-27T14:49:27.750467"
+  },
+  {
+    "username": "admin",
+    "level": 2,
+    "score": 1,
+    "total": 5,
+    "answers": [
+      {
+        "question": "日本で最も北にある都道府県はどこですか？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:53:55.011868"
+  },
+  {
+    "username": "admin",
+    "level": 2,
+    "score": 1,
+    "total": 5,
+    "answers": [
+      {
+        "question": "日本で最も北にある都道府県はどこですか？",
+        "correct": true
+      }
+    ],
+    "timestamp": "2025-03-27T14:58:44.846274"
+  },
+  {
+    "username": "admin",
+    "level": 2,
+    "score": 1,
+    "total": 5,
+    "answers": [
+      {
+        "question": "お正月に家の入口に飾る「門松」は、何を象徴していますか？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-27T14:58:49.372160"
+  },
+  {
+    "username": "aaa",
+    "level": 2,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "すみません(すいません)の意味のうち、当てはまらないものはどれでしょう？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-29T04:01:14.028274"
+  },
+  {
+    "username": "111",
+    "level": 2,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "茶道で、お茶を飲む前にする礼儀作法のひとつは何ですか？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-29T06:01:56.808959"
+  },
+  {
+    "username": "aaa",
+    "level": 2,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "茶道で、お茶を飲む前にする礼儀作法のひとつは何ですか？",
+        "correct": false
+      }
+    ],
+    "timestamp": "2025-03-29T06:20:46.852491"
+  },
+  {
+    "username": "aaa",
+    "level": 2,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本の伝統的な染め物で、模様をつける技法の名前は何ですか？",
+        "correct": false,
+        "userAnswer": "刺繍",
+        "correctAnswer": "絞り染め"
+      }
+    ],
+    "timestamp": "2025-03-29T06:28:56.256038"
+  },
+  {
+    "username": "aaa",
+    "level": 2,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本の夏の風物詩で、風に揺れて音を鳴らすものは何ですか？",
+        "correct": false,
+        "userAnswer": "花火",
+        "correctAnswer": "風鈴"
+      }
+    ],
+    "timestamp": "2025-03-29T06:34:11.521727"
+  },
+  {
+    "username": "aaa",
+    "level": 2,
+    "score": 1,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本の伝統的な打楽器は何ですか？",
+        "correct": true,
+        "userAnswer": "太鼓",
+        "correctAnswer": "太鼓"
+      }
+    ],
+    "timestamp": "2025-03-29T06:35:34.253019"
+  },
+  {
+    "username": "aaa",
+    "level": 2,
+    "score": 1,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本の夏の風物詩で、風に揺れて音を鳴らすものは何ですか？",
+        "correct": false,
+        "userAnswer": "竹",
+        "correctAnswer": "風鈴"
+      }
+    ],
+    "timestamp": "2025-03-29T06:35:36.701500"
+  },
+  {
+    "username": "qwqw",
+    "level": 2,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本の昔話「浦島太郎」で、浦島太郎が助けた動物は何ですか？",
+        "correct": false,
+        "userAnswer": "猿",
+        "correctAnswer": "亀"
+      }
+    ],
+    "timestamp": "2025-03-29T06:40:10.251234"
+  },
+  {
+    "username": "qwqw",
+    "level": 2,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "メイドの服を着た店員が接客するカフェは何と呼ばれますか？",
+        "correct": false,
+        "userAnswer": "カフェバー",
+        "correctAnswer": "メイドカフェ"
+      }
+    ],
+    "timestamp": "2025-03-29T06:48:21.084648"
+  },
+  {
+    "username": "qwqw",
+    "level": 2,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "短歌の基本の音数は何ですか？",
+        "correct": false,
+        "userAnswer": "7-5-7",
+        "correctAnswer": "5-7-5-7-7"
+      }
+    ],
+    "timestamp": "2025-03-29T06:52:17.231085"
+  },
+  {
+    "username": "qwqw",
+    "level": 2,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "日本で最も北にある都道府県はどこですか？",
+        "correct": false,
+        "userAnswer": "青森県",
+        "correctAnswer": "北海道"
+      }
+    ],
+    "timestamp": "2025-03-29T06:55:44.801317"
+  },
+  {
+    "username": "aaa",
+    "level": 2,
+    "score": 0,
+    "total": 50,
+    "answers": [
+      {
+        "question": "3時ごろ、少しお腹が空いた頃に食べるものを何と言いますか？",
+        "correct": false,
+        "userAnswer": "昼食",
+        "correctAnswer": "おやつ"
+      }
+    ],
+    "timestamp": "2025-03-30T20:35:09.461034"
+  }
+]

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クイズ / Quiz</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      background-color: #f4f4f4;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      margin-bottom: 60px; /* Space for bottom nav */
+    }
+    .title {
+      text-align: center;
+      margin: 10px 0;
+    }
+    .quiz-container {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .level-select {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+    .level-button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .level-button:hover {
+      background-color: #0069d9;
+    }
+    .question-text {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    .option {
+      background-color: #f8f9fa;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .option:hover {
+      background-color: #e9ecef;
+    }
+    .result {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .correct {
+      color: #28a745;
+    }
+    .incorrect {
+      color: #dc3545;
+    }
+    .button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .progress-bar {
+      height: 8px;
+      background-color: #e9ecef;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .progress {
+      height: 100%;
+      background-color: #007bff;
+      border-radius: 4px;
+    }
+    /* Bottom Navigation */
+    .bottom-nav {
+      display: flex;
+      background-color: white;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      justify-content: space-around;
+      padding: 8px 0;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #666;
+      text-decoration: none;
+      padding: 5px 0;
+      flex-grow: 1;
+      text-align: center;
+    }
+    .nav-item.active {
+      color: #007bff;
+      border-top: 3px solid #007bff;
+      padding-top: 2px;
+    }
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    /* Loading spinner */
+    .loading {
+      text-align: center;
+      padding: 40px 0;
+    }
+    .spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top-color: #007bff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .score-display {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    .current-score {
+      font-weight: bold;
+      color: #007bff;
+    }
+    
+    /* Quiz button styling */
+    .quiz-button {
+      background-color: #007bff;
+      color: white;
+      border-radius: 50%;
+      width: 70px;
+      height: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: -20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    
+    .quiz-button:hover {
+      transform: scale(1.05);
+      background-color: #0069d9;
+      color: white;
+    }
+    
+    .quiz-icon {
+      font-size: 28px;
+      margin-bottom: 2px;
+    }
+    
+    .quiz-text {
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .bottom-nav-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      width: 100%;
+    }
+    
+    .side-nav-items {
+      display: flex;
+      justify-content: space-around;
+      flex-grow: 1;
+    }
+
+    /* Language toggle styling */
+    .language-toggle {
+      display: flex;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 3px;
+      font-size: 14px;
+    }
+    
+    .language-option {
+      padding: 4px 10px;
+      cursor: pointer;
+      border-radius: 18px;
+      transition: all 0.2s;
+    }
+    
+    .language-option.active {
+      background-color: white;
+      color: #007bff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <div>ようこそ <span class="fw-bold">${ username }</span> さん</div>
+      <div class="language-toggle">
+        <div 
+          class="language-option" 
+          :class="{ active: currentLanguage === 'ja' }" 
+          @click="switchLanguage('ja')">JA</div>
+        <div 
+          class="language-option" 
+          :class="{ active: currentLanguage === 'en' }" 
+          @click="switchLanguage('en')">EN</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <h1 class="title">${ translations.title }</h1>
+      
+      <!-- Loading state -->
+      <div v-if="loading" class="loading">
+        <div class="spinner"></div>
+        <p>${ translations.loading }</p>
+      </div>
+      
+      <!-- Level selection -->
+      <div v-if="currentView === 'level-select'" class="quiz-container">
+        <h2>${ translations.selectLevel }</h2>
+        <div class="level-select">
+          <button 
+            v-for="level in 3" 
+            :key="level"
+            class="level-button" 
+            @click="selectLevel(level)">
+            ${ translations['level' + level] }
+          </button>
+        </div>
+        <p style="text-align: center; margin-top: 20px;">
+          ${ translations.continuousMode }
+        </p>
+      </div>
+      
+      <!-- Question display -->
+      <div v-if="currentView === 'question'" class="quiz-container">
+        <div class="score-display">
+          <div class="current-score">${ translations.score }: ${ score }</div>
+        </div>
+        <div class="question-text">${ currentQuestion.question }</div>
+        <div>
+          <div 
+            v-for="(option, index) in currentQuestion.options" 
+            :key="index"
+            class="option"
+            @click="selectOption(index)">
+            ${ option }
+          </div>
+        </div>
+      </div>
+      
+      <!-- Correct Result display -->
+      <div v-if="currentView === 'correct'" class="quiz-container">
+        <div class="result correct">${ translations.correct }</div>
+        <div class="buttons-container">
+          <button class="button" @click="nextQuestion">${ translations.nextQuestion }</button>
+          <button class="button" @click="goToMain">${ translations.finish }</button>
+        </div>
+      </div>
+      
+      <!-- Final score (shown when wrong answer or all questions answered) -->
+      <div v-if="currentView === 'final'" class="quiz-container">
+        <h2>${ translations.quizComplete }</h2>
+        <div :class="['result', allCorrect ? 'correct' : 'incorrect']">
+          ${ allCorrect ? translations.allCorrect : translations.incorrect }
+        </div>
+        <div v-if="!allCorrect" style="text-align: center; margin: 15px 0;">
+          ${ correctAnswerText }
+        </div>
+        <div class="result">
+          ${ translations.finalScore }: ${ score }
+        </div>
+        <div class="buttons-container">
+          <button class="button" @click="restartQuiz">${ translations.tryAgain }</button>
+          <button class="button" @click="goToMain">${ translations.finish }</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="bottom-nav-container">
+        <div class="side-nav-items">
+          <a href="camera.html" class="nav-item">
+            <div class="nav-icon">📷</div>
+            <div>${ translations.camera }</div>
+          </a>
+        </div>
+        
+        <a href="quiz.html" class="quiz-button">
+          <div class="quiz-icon">❓</div>
+          <div class="quiz-text">${ translations.quiz }</div>
+        </a>
+        
+        <div class="side-nav-items">
+          <a href="menu.html" class="nav-item">
+            <div class="nav-icon">☰</div>
+            <div>${ translations.menu }</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      delimiters: ['${', '}'],  // Changed delimiters to avoid conflict with Jinja2
+      data: {
+        username: '',
+        currentLanguage: 'ja',
+        currentLevel: 0,
+        allQuestions: [],
+        availableQuestions: [],
+        currentQuestion: null,
+        score: 0,
+        loading: false,
+        currentView: 'level-select', // 'level-select', 'question', 'correct', 'final'
+        allCorrect: false,
+        correctAnswerText: '',
+        translations: {
+          // Japanese translations (default)
+          title: 'クイズ',
+          loading: '読み込み中...',
+          selectLevel: 'レベルを選択してください',
+          level1: 'レベル 1',
+          level2: 'レベル 2',
+          level3: 'レベル 3',
+          continuousMode: '連続モード: 間違えるまで挑戦できます！',
+          score: 'スコア',
+          correct: '正解です！',
+          incorrect: '残念！不正解です',
+          nextQuestion: '次の問題',
+          finish: '終了する',
+          quizComplete: 'クイズ終了',
+          finalScore: '最終スコア',
+          tryAgain: 'もう一度',
+          allCorrect: 'おめでとう！全問正解です！',
+          correctAnswer: '正解: ',
+          camera: 'カメラ',
+          quiz: 'クイズ',
+          menu: 'メニュー'
+        }
+      },
+      created() {
+        // Check if user is logged in
+        const user = localStorage.getItem('username');
+        if (!user) {
+          window.location.href = 'index.html';
+        } else {
+          this.username = user;
+        }
+
+        // Check saved language preference if any
+        const savedLanguage = localStorage.getItem('quizLanguage');
+        if (savedLanguage) {
+          this.switchLanguage(savedLanguage);
+        }
+      },
+      methods: {
+        switchLanguage(lang) {
+          this.currentLanguage = lang;
+
+          // Save language preference
+          localStorage.setItem('quizLanguage', lang);
+
+          // Update translations
+          if (lang === 'en') {
+            this.translations = {
+              title: 'Quiz',
+              loading: 'Loading...',
+              selectLevel: 'Select Level',
+              level1: 'Level 1',
+              level2: 'Level 2',
+              level3: 'Level 3',
+              continuousMode: 'Continuous Mode: Keep playing until you make a mistake!',
+              score: 'Score',
+              correct: 'Correct!',
+              incorrect: 'Sorry! Incorrect answer',
+              nextQuestion: 'Next Question',
+              finish: 'Finish',
+              quizComplete: 'Quiz Complete',
+              finalScore: 'Final Score',
+              tryAgain: 'Try Again',
+              allCorrect: 'Congratulations! All answers correct!',
+              correctAnswer: 'Correct answer: ',
+              camera: 'Camera',
+              quiz: 'Quiz',
+              menu: 'Menu'
+            };
+          } else {
+            this.translations = {
+              title: 'クイズ',
+              loading: '読み込み中...',
+              selectLevel: 'レベルを選択してください',
+              level1: 'レベル 1',
+              level2: 'レベル 2',
+              level3: 'レベル 3',
+              continuousMode: '連続モード: 間違えるまで挑戦できます！',
+              score: 'スコア',
+              correct: '正解です！',
+              incorrect: '残念！不正解です',
+              nextQuestion: '次の問題',
+              finish: '終了する',
+              quizComplete: 'クイズ終了',
+              finalScore: '最終スコア',
+              tryAgain: 'もう一度',
+              allCorrect: 'おめでとう！全問正解です！',
+              correctAnswer: '正解: ',
+              camera: 'カメラ',
+              quiz: 'クイズ',
+              menu: 'メニュー'
+            };
+          }
+
+          // If we're in a question, we need to reload the questions in the new language
+          if (this.currentView === 'question' && this.currentLevel > 0) {
+            this.loadQuestions(this.currentLevel);
+          }
+        },
+
+        selectLevel(level) {
+          this.currentLevel = level;
+          this.score = 0;
+          this.loading = true;
+          this.currentView = 'loading';
+
+          this.loadQuestions(level);
+        },
+
+        loadQuestions(level) {
+          // Fetch quiz questions for the selected level with language parameter
+          fetch(`/api/quiz/${level}?lang=${this.currentLanguage}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.success && data.questions && data.questions.length > 0) {
+                // Store all questions
+                this.allQuestions = data.questions;
+                console.log(`Loaded ${this.allQuestions.length} questions for level ${level}`);
+
+                // Shuffle all questions
+                this.availableQuestions = JSON.parse(JSON.stringify(this.allQuestions));
+                this.shuffleArray(this.availableQuestions);
+
+                // Show the first question
+                this.showNextQuestion();
+              } else {
+                alert(this.currentLanguage === 'ja' ?
+                  'クイズデータの読み込みに失敗しました。' :
+                  'Failed to load quiz data.');
+                this.loading = false;
+                this.currentView = 'level-select';
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching questions:', error);
+              alert(this.currentLanguage === 'ja' ?
+                'エラーが発生しました。もう一度お試しください。' :
+                'An error occurred. Please try again.');
+              this.loading = false;
+              this.currentView = 'level-select';
+            });
+        },
+
+        // Shuffle array using Fisher-Yates algorithm
+        shuffleArray(array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+          }
+        },
+
+        showNextQuestion() {
+          this.loading = false;
+
+          // Check if we have any questions left
+          if (this.availableQuestions.length === 0) {
+            // All questions answered correctly!
+            this.showFinalResult(true);
+            return;
+          }
+
+          // Get the next question
+          this.currentQuestion = this.availableQuestions.pop();
+          this.currentView = 'question';
+        },
+
+        selectOption(index) {
+          this.selectedOptionIndex = index;
+
+          const isCorrect = index === this.currentQuestion.answer;
+
+          if (isCorrect) {
+            // Correct answer
+            this.score++;
+            this.currentView = 'correct';
+
+            // Save result
+            this.saveResult(true);
+          } else {
+            // Wrong answer - game over
+            this.correctAnswerText =
+              this.translations.correctAnswer + this.currentQuestion.options[this.currentQuestion.answer];
+            this.allCorrect = false;
+            this.currentView = 'final';
+
+            // Save result
+            this.saveResult(false);
+          }
+        },
+
+        nextQuestion() {
+          this.showNextQuestion();
+        },
+
+        showFinalResult(allCorrect) {
+          this.allCorrect = allCorrect;
+          this.currentView = 'final';
+        },
+
+        restartQuiz() {
+          window.location.href = 'quiz.html';
+        },
+
+        goToMain() {
+          window.location.href = 'quiz.html';
+        },
+
+        saveResult(isCorrect) {
+          const userAnswerText = this.currentQuestion.options[this.selectedOptionIndex];
+          const correctAnswerText = this.currentQuestion.options[this.currentQuestion.answer];
+
+          fetch('/api/quiz-result', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              username: this.username,
+              level: this.currentLevel,
+              score: this.score,
+              language: this.currentLanguage,
+              total: this.allQuestions.length,
+              answers: [{
+                question: this.currentQuestion.question,
+                correct: isCorrect,
+                userAnswer: userAnswerText,
+                correctAnswer: correctAnswerText
+              }]
+            })
+          }).catch(error => {
+            console.error('Error saving result:', error);
+          });
+        }
+      }
+    });
+</script>
+
+</body>
+</html>
