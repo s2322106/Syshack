@@ -8,12 +8,12 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
+      background-color: #808080; /* Changed to gray to match quiz.html */
       margin: 0;
       padding: 0;
     }
     .header {
-      background-color: #007bff;
+      background-color: #808080; /* Changed to gray to match quiz.html */
       color: white;
       padding: 10px 15px;
       display: flex;
@@ -31,6 +31,7 @@
     h1 {
       text-align: center;
       margin-bottom: 20px;
+      color: #333;
     }
     .form-group {
       margin-bottom: 15px;
@@ -50,16 +51,19 @@
     button {
       width: 100%;
       padding: 12px;
-      background-color: #007bff;
+      background-color: #808080; /* Changed to gray to match quiz.html */
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
       font-size: 16px;
       margin-top: 10px;
+      transition: all 0.3s ease;
     }
     button:hover {
-      background-color: #0069d9;
+      background-color: #707070; /* Darker gray on hover to match quiz.html */
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
     .message {
       margin-top: 15px;
@@ -76,7 +80,7 @@
       color: #721c24;
     }
 
-    /* Bottom Navigation */
+    /* Bottom Navigation - updated to match quiz.html */
     .bottom-nav {
       display: flex;
       background-color: white;
@@ -103,8 +107,8 @@
     }
 
     .nav-item.active {
-      color: #007bff;
-      border-top: 3px solid #007bff;
+      color: #808080; /* Changed to gray to match quiz.html */
+      border-top: 3px solid #808080; /* Changed to gray to match quiz.html */
       padding-top: 2px;
     }
 
@@ -114,7 +118,7 @@
     }
 
     .quiz-button {
-      background-color: #007bff;
+      background-color: #808080; /* Changed to gray to match quiz.html */
       color: white;
       border-radius: 50%;
       width: 70px;
@@ -131,13 +135,14 @@
 
     .quiz-button:hover {
       transform: scale(1.05);
-      background-color: #0069d9;
+      background-color: #707070; /* Darker gray on hover to match quiz.html */
       color: white;
     }
 
     .quiz-icon {
       font-size: 28px;
       margin-bottom: 2px;
+      color: red; /* Red question mark to match quiz.html */
     }
 
     .quiz-text {
@@ -168,7 +173,7 @@
       margin-right: 16px;
       cursor: pointer;
       background-color: white;
-      color: #007bff;
+      color: #808080; /* Changed to gray to match quiz.html */
       border-radius: 50%;
       width: 36px;
       height: 36px;
