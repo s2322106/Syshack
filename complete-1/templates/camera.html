@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>カメラ撮影</title>
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <style>
@@ -10,6 +11,7 @@
       margin: 0;
       padding: 0;
       background-color: #f4f4f4;
+      overscroll-behavior: none;
     }
     .header {
       background-color: #007bff;
@@ -20,20 +22,20 @@
       align-items: center;
     }
     .container {
-      max-width: 800px;
+      max-width: 100%;
       margin: 0 auto;
-      padding: 20px;
-      padding-bottom: 100px; /* バーのための余白 */
+      padding: 10px;
+      padding-bottom: 80px; /* バーのための余白 */
     }
     .menu-options {
       display: flex;
       flex-direction: column;
       gap: 15px;
-      margin-top: 20px;
+      margin-top: 10px;
     }
     .menu-option {
       background-color: white;
-      padding: 20px;
+      padding: 15px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       display: flex;
@@ -50,6 +52,7 @@
       cursor: pointer;
       font-size: 16px;
       margin: 10px 5px;
+      -webkit-tap-highlight-color: transparent;
     }
     .button:hover {
       background-color: #0056b3;
@@ -57,13 +60,21 @@
     canvas, video {
       border-radius: 10px;
       border: 2px solid #007bff;
+      max-width: 100%;
+      height: auto;
     }
     .center-buttons {
       text-align: center;
       margin-top: 10px;
     }
+    .camera-container {
+      position: relative;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+    }
 
-    /* ✅ Bottom Navigation */
+    /* Bottom Navigation */
     .bottom-nav {
       display: flex;
       background-color: white;
@@ -123,6 +134,52 @@
       font-size: 12px;
       font-weight: bold;
     }
+    /* Loading indicator */
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+    }
+    .loading-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .camera-controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-around;
+    }
+    .camera-switch {
+      padding: 8px 15px;
+      background-color: #444;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -145,8 +202,14 @@
     <div class="container">
       <div class="menu-options">
         <div class="menu-option">
-          <video ref="video" v-show="!photo" autoplay playsinline muted width="640" height="480"></video>
-          <canvas ref="canvas" width="640" height="480" v-show="photo"></canvas>
+          <div class="camera-container">
+            <video ref="video" v-show="!photo" autoplay playsinline muted></video>
+            <canvas ref="canvas" v-show="photo"></canvas>
+          </div>
+          
+          <div class="camera-controls" v-if="!photo && hasMultipleCameras">
+            <button class="camera-switch" @click="switchCamera">📱 カメラ切替</button>
+          </div>
         </div>
 
         <div class="center-buttons" v-if="!photo">
@@ -166,9 +229,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Loading indicator -->
+    <div class="loading" v-if="isLoading">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <div>[[ loadingMessage ]]</div>
+      </div>
+    </div>
   </div>
 
-  <!-- ✅ Bottom Navigation -->
+  <!-- Bottom Navigation -->
   <div class="bottom-nav">
     <div class="bottom-nav-container">
       <div class="side-nav-items">
@@ -203,17 +274,86 @@
         translatedObjects: [],
         lastFrameData: null,
         stillStartTime: null,
-        detectionCooldown: false
+        detectionCooldown: false,
+        isLoading: false,
+        loadingMessage: '処理中...',
+        facingMode: 'environment', // Default to rear camera
+        hasMultipleCameras: false,
+        availableCameras: [],
+        currentCameraIndex: 0,
+        canvasWidth: 640,
+        canvasHeight: 480
       },
       methods: {
-        startCamera() {
-          navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-              this.stream = stream;
-              this.$refs.video.srcObject = stream;
-              this.setupAutoDetection();
-            })
-            .catch(error => console.error("カメラ起動エラー:", error));
+        async checkAvailableCameras() {
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            this.availableCameras = devices.filter(device => device.kind === 'videoinput');
+            this.hasMultipleCameras = this.availableCameras.length > 1;
+          } catch (error) {
+            console.error("カメラ情報の取得エラー:", error);
+          }
+        },
+        async switchCamera() {
+          if (this.stream) {
+            this.stopCamera();
+          }
+          
+          this.currentCameraIndex = (this.currentCameraIndex + 1) % this.availableCameras.length;
+          const cameraId = this.availableCameras[this.currentCameraIndex].deviceId;
+          
+          await this.startCamera({
+            video: {
+              deviceId: { exact: cameraId }
+            }
+          });
+        },
+        async startCamera(constraints = null) {
+          this.isLoading = true;
+          this.loadingMessage = 'カメラ起動中...';
+          
+          try {
+            const defaultConstraints = {
+              video: {
+                facingMode: this.facingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              }
+            };
+            
+            const streamConstraints = constraints || defaultConstraints;
+            this.stream = await navigator.mediaDevices.getUserMedia(streamConstraints);
+            
+            const video = this.$refs.video;
+            video.srcObject = this.stream;
+            
+            // Set canvas dimensions based on video track
+            const track = this.stream.getVideoTracks()[0];
+            const settings = track.getSettings();
+            
+            // Update canvas dimensions
+            const canvas = this.$refs.canvas;
+            this.canvasWidth = settings.width || 640;
+            this.canvasHeight = settings.height || 480;
+            canvas.width = this.canvasWidth;
+            canvas.height = this.canvasHeight;
+            
+            // Wait for video to be ready
+            await new Promise(resolve => {
+              video.onloadedmetadata = () => {
+                video.play();
+                resolve();
+              };
+            });
+            
+            this.setupAutoDetection();
+            await this.checkAvailableCameras();
+          } catch (error) {
+            console.error("カメラ起動エラー:", error);
+            alert("カメラの起動に失敗しました。カメラへのアクセス許可を確認してください。");
+          } finally {
+            this.isLoading = false;
+          }
         },
         stopCamera() {
           if (this.stream) {
@@ -225,6 +365,10 @@
           const canvas = this.$refs.canvas;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(this.$refs.video, 0, 0, canvas.width, canvas.height);
+          
+          this.isLoading = true;
+          this.loadingMessage = '画像処理中...';
+          
           canvas.toBlob(blob => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -233,10 +377,13 @@
               this.sendToFlask(this.photo);
             };
             reader.readAsDataURL(blob);
-          }, 'image/png');
+          }, 'image/jpeg', 0.9);
         },
         sendToFlask(base64data) {
           const username = localStorage.getItem('username') || null;
+          this.isLoading = true;
+          this.loadingMessage = '物体検出中...';
+          
           fetch('/api/photo-analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -244,6 +391,7 @@
           })
             .then(res => res.json())
             .then(data => {
+              this.isLoading = false;
               if (data.success) {
                 this.objects = data.objects;
                 this.drawBoundingBoxes(this.objects);
@@ -252,7 +400,11 @@
                 alert("物体検出に失敗しました: " + data.message);
               }
             })
-            .catch(err => console.error("Flaskとの通信エラー:", err));
+            .catch(err => {
+              this.isLoading = false;
+              console.error("Flaskとの通信エラー:", err);
+              alert("サーバーとの通信に失敗しました。もう一度お試しください。");
+            });
         },
         drawBoundingBoxes(objects) {
           const canvas = this.$refs.canvas;
@@ -282,73 +434,91 @@
           img.src = this.photo;
         },
         async translateLabels() {
-          const translations = await Promise.all(this.objects.map(async obj => {
-            try {
-              const res = await fetch("/api/google-translate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: obj.name })
-              });
-              const data = await res.json();
-              return { en: obj.name, jp: data.translated_text || "翻訳失敗" };
-            } catch (err) {
-              console.error("翻訳エラー:", err);
-              return { en: obj.name, jp: "翻訳失敗" };
-            }
-          }));
-          this.translatedObjects = translations;
+          this.isLoading = true;
+          this.loadingMessage = '翻訳中...';
+          
+          try {
+            const translations = await Promise.all(this.objects.map(async obj => {
+              try {
+                const res = await fetch("/api/google-translate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ text: obj.name })
+                });
+                const data = await res.json();
+                return { en: obj.name, jp: data.translated_text || "翻訳失敗" };
+              } catch (err) {
+                console.error("翻訳エラー:", err);
+                return { en: obj.name, jp: "翻訳失敗" };
+              }
+            }));
+            this.translatedObjects = translations;
+          } finally {
+            this.isLoading = false;
+          }
         },
         setupAutoDetection() {
           const canvas = this.$refs.canvas;
           const ctx = canvas.getContext('2d');
           const video = this.$refs.video;
 
-          setInterval(() => {
-            if (!this.stream) return;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-            if (this.lastFrameData) {
-              const diff = this.calculateFrameDifference(this.lastFrameData.data, currentFrame.data);
-              const threshold = 0.02;
-              const isStill = diff < threshold;
-
-              if (isStill && !this.detectionCooldown && !this.photo) {
-                if (!this.stillStartTime) {
-                  this.stillStartTime = Date.now();
-                } else if (Date.now() - this.stillStartTime > 1000) {
-                  canvas.toBlob(blob => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      this.photo = reader.result;
-                      this.stopCamera();
-                      this.sendToFlask(this.photo);
-                    };
-                    reader.readAsDataURL(blob);
-                  }, 'image/jpeg');
-
-                  this.detectionCooldown = true;
-                  setTimeout(() => {
-                    this.detectionCooldown = false;
-                  }, 3000);
-                }
-              } else {
-                this.stillStartTime = null;
-              }
+          const detectInterval = setInterval(() => {
+            if (!this.stream || this.photo) {
+              clearInterval(detectInterval);
+              return;
             }
+            
+            try {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-            this.lastFrameData = currentFrame;
+              if (this.lastFrameData) {
+                const diff = this.calculateFrameDifference(this.lastFrameData.data, currentFrame.data);
+                const threshold = 0.02;
+                const isStill = diff < threshold;
+
+                if (isStill && !this.detectionCooldown) {
+                  if (!this.stillStartTime) {
+                    this.stillStartTime = Date.now();
+                  } else if (Date.now() - this.stillStartTime > 1000) {
+                    canvas.toBlob(blob => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        this.photo = reader.result;
+                        this.stopCamera();
+                        this.sendToFlask(this.photo);
+                      };
+                      reader.readAsDataURL(blob);
+                    }, 'image/jpeg', 0.9);
+
+                    this.detectionCooldown = true;
+                    setTimeout(() => {
+                      this.detectionCooldown = false;
+                    }, 3000);
+                  }
+                } else {
+                  this.stillStartTime = null;
+                }
+              }
+
+              this.lastFrameData = currentFrame;
+            } catch (e) {
+              console.error("Auto detection error:", e);
+            }
           }, 200);
         },
         calculateFrameDifference(data1, data2) {
           let diffPixels = 0;
-          for (let i = 0; i < data1.length; i += 4) {
+          const sampleSize = Math.floor(data1.length / 40); // Sample only a portion for performance
+          
+          for (let i = 0; i < data1.length; i += 40) {
             const rDiff = Math.abs(data1[i] - data2[i]);
             const gDiff = Math.abs(data1[i + 1] - data2[i + 1]);
             const bDiff = Math.abs(data1[i + 2] - data2[i + 2]);
             if (rDiff + gDiff + bDiff > 30) diffPixels++;
           }
-          return diffPixels / (data1.length / 4);
+          
+          return diffPixels / (data1.length / 40 / 4);
         },
         retakePhoto() {
           this.photo = '';
@@ -359,13 +529,38 @@
         },
         goToMain() {
           window.location.href = "/quiz.html";
+        },
+        handleVisibilityChange() {
+          if (document.hidden) {
+            this.stopCamera();
+          } else if (!this.photo) {
+            this.startCamera();
+          }
         }
       },
-      mounted() {
-        this.startCamera();
+      async mounted() {
+        // Check if device orientation is supported and add listener
+        if (window.DeviceOrientationEvent) {
+          window.addEventListener('orientationchange', () => {
+            // Give time for the orientation change to complete
+            setTimeout(() => {
+              if (!this.photo) {
+                this.stopCamera();
+                this.startCamera();
+              }
+            }, 500);
+          });
+        }
+        
+        // Handle page visibility changes (switching apps, etc.)
+        document.addEventListener('visibilitychange', this.handleVisibilityChange);
+        
+        // Initialize camera
+        await this.startCamera();
       },
       beforeDestroy() {
         this.stopCamera();
+        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
       }
     });
   </script>
