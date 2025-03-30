@@ -9,19 +9,22 @@
   <style>
     body {
       font-family: 'Helvetica Neue', Arial, sans-serif;
-      background-color: #f8f9fa;
+      background-color: #808080 !important; /* Gray background to match other pages */
       min-height: 100vh;
     }
     .header {
-      background-color: #0d6efd;
+      background-color: rgba(128, 128, 128, 0.8); /* Semi-transparent gray to match */
       color: white;
       padding: 15px 20px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(5px);
     }
     .menu-title {
-      color: #0d6efd;
+      color: white; /* Changed to white to be visible on gray background */
       font-weight: 600;
       margin-bottom: 1.5rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     .menu-card {
       transition: all 0.3s ease;
@@ -29,6 +32,8 @@
       border: none;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      background-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white */
+      backdrop-filter: blur(5px);
     }
     .menu-card:hover {
       transform: translateY(-5px);
@@ -51,8 +56,8 @@
       font-size: 0.95rem;
     }
     .btn-primary {
-      background-color: #0d6efd;
-      border-color: #0d6efd;
+      background-color: #808080; /* Gray to match */
+      border-color: #808080;
     }
     .card-body {
       padding: 1.5rem;
@@ -70,8 +75,8 @@
     /* Bottom Navigation */
     .bottom-nav {
       display: flex;
-      background-color: white;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      background-color: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
       position: fixed;
       bottom: 0;
       left: 0;
@@ -79,6 +84,7 @@
       z-index: 1000;
       justify-content: space-around;
       padding: 8px 0;
+      backdrop-filter: blur(5px);
     }
     .nav-item {
       display: flex;
@@ -91,8 +97,8 @@
       text-align: center;
     }
     .nav-item.active {
-      color: #0d6efd;
-      border-top: 3px solid #0d6efd;
+      color: #808080; /* Gray to match */
+      border-top: 3px solid #808080;
       padding-top: 2px;
     }
     .nav-icon {
@@ -101,7 +107,7 @@
     }
     /* Quiz button styling */
     .quiz-button {
-      background-color: #0d6efd;
+      background-color: #808080; /* Gray to match */
       color: white;
       border-radius: 50%;
       width: 70px;
@@ -118,7 +124,7 @@
     
     .quiz-button:hover {
       transform: scale(1.05);
-      background-color: #0b5ed7;
+      background-color: #707070; /* Darker gray on hover */
       color: white;
     }
     

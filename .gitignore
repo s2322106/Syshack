@@ -1,0 +1,15 @@
+# Ignore Python virtual environments
+venv/
+final_quiz_camera_with_ai_loginfix/venv/
+
+# Ignore node_modules if present
+node_modules/
+
+# Ignore any build artifacts or unwanted files
+*.log
+
+# Ignore sensitive files from specific subdirectories if needed
+fix.ver5/vision_key.json
+
+.DS_Store
+# Ignore Jupyter Notebook checkpoints

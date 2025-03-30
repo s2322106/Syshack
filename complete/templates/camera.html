@@ -2,72 +2,104 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>カメラ撮影</title>
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
+    html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
-      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+      background-color: #808080 !important; /* Gray background to match quiz page */
     }
+    body {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
     .header {
-      background-color: #007bff;
+      background-color: rgba(128, 128, 128, 0.8); /* Semi-transparent gray */
       color: white;
-      padding: 10px 20px;
+      padding: 10px 15px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: relative;
+      z-index: 2;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(5px);
     }
+    
     .container {
+      flex: 1;
       max-width: 800px;
       margin: 0 auto;
       padding: 20px;
-      padding-bottom: 100px; /* バーのための余白 */
+      padding-bottom: 100px; /* Space for bottom nav */
+      position: relative;
+      z-index: 2;
     }
+    
     .menu-options {
       display: flex;
       flex-direction: column;
       gap: 15px;
       margin-top: 20px;
     }
+    
     .menu-option {
-      background-color: white;
+      background-color: rgba(255, 255, 255, 0.85);
       padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 15px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(5px);
     }
+    
     .button {
-      background-color: #007bff;
+      background-color: #8a8a8a; /* Matching the quiz button color */
       color: white;
       border: none;
-      border-radius: 5px;
-      padding: 10px 20px;
+      padding: 14px 28px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
       margin: 10px 5px;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
     }
+    
     .button:hover {
-      background-color: #0056b3;
+      background-color: #707070; /* Darker on hover */
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
     }
+    
     canvas, video {
       border-radius: 10px;
-      border: 2px solid #007bff;
+      border: 2px solid rgba(128, 128, 128, 0.6);
+      max-width: 100%;
     }
+    
     .center-buttons {
       text-align: center;
-      margin-top: 10px;
+      margin-top: 20px;
     }
 
-    /* ✅ Bottom Navigation */
+    /* Bottom Navigation */
     .bottom-nav {
       display: flex;
-      background-color: white;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      background-color: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
       position: fixed;
       bottom: 0;
       left: 0;
@@ -75,18 +107,22 @@
       z-index: 1000;
       justify-content: space-around;
       padding: 8px 0;
+      backdrop-filter: blur(5px);
     }
+    
     .bottom-nav-container {
       display: flex;
       justify-content: space-around;
       align-items: flex-end;
       width: 100%;
     }
+    
     .side-nav-items {
       display: flex;
       justify-content: space-around;
       flex-grow: 1;
     }
+    
     .nav-item {
       display: flex;
       flex-direction: column;
@@ -96,10 +132,15 @@
       padding: 5px 0;
       flex-grow: 1;
       text-align: center;
-      font-size: 12px;
     }
+    
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    
     .quiz-button {
-      background-color: #007bff;
+      background-color: #808080; /* Gray button color */
       color: white;
       border-radius: 50%;
       width: 70px;
@@ -109,33 +150,43 @@
       align-items: center;
       justify-content: center;
       margin-top: -20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
       text-decoration: none;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
     }
+    
     .quiz-button:hover {
-      background-color: #0069d9;
+      transform: scale(1.05);
+      background-color: #707070; /* Darker on hover */
+      color: white;
     }
+    
     .quiz-icon {
       font-size: 28px;
       margin-bottom: 2px;
+      position: relative;
+      z-index: 1;
     }
+    
     .quiz-text {
       font-size: 12px;
       font-weight: bold;
+      position: relative;
+      z-index: 1;
+    }
+
+    .title {
+      text-align: center;
+      margin: 10px 0;
+      color: white;
+      position: relative;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
   </style>
 </head>
 <body>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const username = localStorage.getItem('username');
-      if (!username) {
-        alert("ログインしてください");
-        window.location.href = "index.html";
-      }
-    });
-  </script>
-
   <div id="app">
     <div class="header">
       <div>📸 カメラで撮影</div>
@@ -143,6 +194,8 @@
     </div>
 
     <div class="container">
+      <h1 class="title">カメラ</h1>
+      
       <div class="menu-options">
         <div class="menu-option">
           <video ref="video" v-show="!photo" autoplay playsinline muted width="640" height="480"></video>
@@ -166,26 +219,28 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ✅ Bottom Navigation -->
-  <div class="bottom-nav">
-    <div class="bottom-nav-container">
-      <div class="side-nav-items">
-        <a href="camera.html" class="nav-item">
-          <div class="nav-icon">📷</div>
-          <div>カメラ</div>
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+      <div class="bottom-nav-container">
+        <div class="side-nav-items">
+          <a href="camera.html" class="nav-item">
+            <div class="nav-icon">📷</div>
+            <div>カメラ</div>
+          </a>
+        </div>
+        
+        <a href="quiz.html" class="quiz-button">
+          <div class="quiz-icon">❓</div>
+          <div class="quiz-text">クイズ</div>
         </a>
-      </div>
-      <a href="quiz.html" class="quiz-button">
-        <div class="quiz-icon">❓</div>
-        <div class="quiz-text">クイズ</div>
-      </a>
-      <div class="side-nav-items">
-        <a href="menu.html" class="nav-item">
-          <div class="nav-icon">☰</div>
-          <div>メニュー</div>
-        </a>
+        
+        <div class="side-nav-items">
+          <a href="menu.html" class="nav-item">
+            <div class="nav-icon">☰</div>
+            <div>メニュー</div>
+          </a>
+        </div>
       </div>
     </div>
   </div>
