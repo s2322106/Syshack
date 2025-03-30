@@ -35,25 +35,26 @@
     }
     
     .container {
-      flex: 1;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      padding-bottom: 100px; /* Space for bottom nav */
-      position: relative;
-      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: calc(100vh - 120px); /* Full height minus header and nav */
+      overflow-y: auto;
+      padding-bottom: 80px; /* Space for bottom nav */
     }
     
     .menu-options {
       display: flex;
       flex-direction: column;
       gap: 15px;
-      margin-top: 20px;
+      margin: 10px auto;
+      width: 90%;
+      max-width: 800px;
     }
     
     .menu-option {
       background-color: rgba(255, 255, 255, 0.85);
-      padding: 20px;
+      padding: 15px;
       border-radius: 15px;
       box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
       display: flex;
@@ -95,7 +96,23 @@
     
     .center-buttons {
       text-align: center;
-      margin-top: 20px;
+      margin: 10px 0;
+    }
+
+    /* Camera frame container - fixed height */
+    .camera-frame {
+      height: 40vh; /* Fixed height */
+      max-height: 400px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .camera-frame video, .camera-frame canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     /* Bottom Navigation */
@@ -111,6 +128,7 @@
       justify-content: space-around;
       padding: 8px 0;
       backdrop-filter: blur(5px);
+      height: 60px; /* Fixed height */
     }
     
     .bottom-nav-container {
@@ -217,6 +235,19 @@
       background-color: rgba(0, 0, 0, 0.7);
     }
 
+    /* Take photo button - fixed to bottom above nav */
+    .take-photo-container {
+      position: fixed;
+      bottom: 70px; /* Position above the bottom nav */
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      background-color: rgba(128, 128, 128, 0.5);
+      padding: 10px 0;
+      z-index: 900;
+    }
+
     /* Loading indicator */
     .loading {
       position: fixed;
@@ -251,6 +282,17 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Detected objects container */
+    .detected-objects {
+      background-color: rgba(255, 255, 255, 0.85);
+      padding: 15px;
+      border-radius: 15px;
+      margin: 10px auto;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    }
   </style>
 </head>
 <body>
@@ -264,35 +306,37 @@
       <h1 class="title">カメラ</h1>
       
       <div class="menu-options">
-        <div class="menu-option">
+        <div class="menu-option camera-frame">
           <video ref="video" v-show="!photo" autoplay playsinline muted width="640" height="480"></video>
           <canvas ref="canvas" width="640" height="480" v-show="photo"></canvas>
-          
-          <!-- Camera Controls -->
-          <div class="camera-controls" v-if="!photo && hasMultipleCameras">
-            <button class="camera-switch" @click="switchCamera">
-              <span v-if="facingMode === 'environment'">📱</span>
-              <span v-else>📷</span>
-            </button>
-          </div>
         </div>
 
-        <div class="center-buttons" v-if="!photo">
-          <button class="button" @click="capturePhoto">📸 撮影する</button>
-        </div>
-        <div class="center-buttons" v-if="photo">
-          <button class="button" @click="retakePhoto">🔄 もう一度撮影</button>
-        </div>
-
-        <div class="menu-option" v-if="translatedObjects.length > 0">
-          <h3>検出された物体一覧:</h3>
-          <ul>
-            <li v-for="(obj, index) in translatedObjects" :key="index">
-              [[ index + 1 ]]. [[ obj.en ]] ([[ obj.jp ]])
-            </li>
-          </ul>
+        <!-- Camera Controls - Switch front/back camera -->
+        <div class="camera-controls" v-if="!photo && hasMultipleCameras">
+          <button class="camera-switch" @click="switchCamera">
+            <span v-if="facingMode === 'environment'">📱</span>
+            <span v-else>📷</span>
+          </button>
         </div>
       </div>
+
+      <!-- Detected Objects List -->
+      <div class="detected-objects" v-if="translatedObjects.length > 0">
+        <h3>検出された物体一覧:</h3>
+        <ul>
+          <li v-for="(obj, index) in translatedObjects" :key="index">
+            [[ index + 1 ]]. [[ obj.en ]] ([[ obj.jp ]])
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Take Photo Button - Fixed at bottom above nav -->
+    <div class="take-photo-container" v-if="!photo">
+      <button class="button" @click="capturePhoto">📸 撮影する</button>
+    </div>
+    <div class="take-photo-container" v-if="photo">
+      <button class="button" @click="retakePhoto">🔄 もう一度撮影</button>
     </div>
 
     <!-- Loading indicator -->
@@ -598,7 +642,7 @@
           this.startCamera();
         },
         goToMain() {
-          window.location.href = "/quiz.html";
+          window.location.href = "/menu.html";
         },
         handleVisibilityChange() {
           if (document.hidden) {
