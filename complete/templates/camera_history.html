@@ -22,7 +22,8 @@
     .container {
       max-width: 800px;
       margin: 0 auto;
-      padding: 20px;
+      padding: a
+      20px;
       padding-bottom: 100px;
     }
     .back-icon {
@@ -263,7 +264,17 @@
               minute: '2-digit'
             });
 
-            const pairedWords = item.en.map((e, i) => `${e} ${item.jp[i]}`).join(', ');
+            // Process detected objects
+            let pairedWords = '';
+            if (item.objects && item.objects.length > 0) {
+              // Handle the format where each object has name and translated_name
+              pairedWords = item.objects.map(obj => {
+                return `${obj.name} ${obj.translated_name || ''}`;
+              }).join('<br>');
+            } else if (item.en && item.jp) {
+              // Handle the format with separate en and jp arrays
+              pairedWords = item.en.map((e, i) => `${e} ${item.jp[i] || ''}`).join('<br>');
+            }
 
             div.innerHTML = `
               <div class="timestamp">${formatted}</div>
@@ -296,6 +307,12 @@
         .then(data => {
           if (data.success) {
             button.closest('.history-item').remove();
+            
+            // Check if there are no more photos and display empty state if needed
+            const grid = document.getElementById('photo-history');
+            if (grid.children.length === 0) {
+              grid.innerHTML = '<p><span style="font-size: 36px; display: block; margin-bottom: 10px;">📷</span>履歴はまだありません。<br><span style="font-weight: normal; font-size: 14px; margin-top: 5px; display: block; color: #777;">撮影するとここに表示されます</span></p>';
+            }
           } else {
             alert('削除に失敗しました');
           }
