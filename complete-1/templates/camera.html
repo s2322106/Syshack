@@ -25,17 +25,17 @@
       max-width: 100%;
       margin: 0 auto;
       padding: 10px;
-      padding-bottom: 80px; /* バーのための余白 */
+      padding-bottom: 100px; /* バーのための余白 */
     }
     .menu-options {
       display: flex;
       flex-direction: column;
       gap: 15px;
-      margin-top: 10px;
+      margin-top: 20px;
     }
     .menu-option {
       background-color: white;
-      padding: 15px;
+      padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       display: flex;
@@ -66,12 +66,6 @@
     .center-buttons {
       text-align: center;
       margin-top: 10px;
-    }
-    .camera-container {
-      position: relative;
-      width: 100%;
-      max-width: 640px;
-      margin: 0 auto;
     }
 
     /* Bottom Navigation */
@@ -166,20 +160,6 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    .camera-controls {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-around;
-    }
-    .camera-switch {
-      padding: 8px 15px;
-      background-color: #444;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 14px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -202,14 +182,8 @@
     <div class="container">
       <div class="menu-options">
         <div class="menu-option">
-          <div class="camera-container">
-            <video ref="video" v-show="!photo" autoplay playsinline muted></video>
-            <canvas ref="canvas" v-show="photo"></canvas>
-          </div>
-          
-          <div class="camera-controls" v-if="!photo && hasMultipleCameras">
-            <button class="camera-switch" @click="switchCamera">📱 カメラ切替</button>
-          </div>
+          <video ref="video" v-show="!photo" autoplay playsinline muted width="640" height="480" style="max-width: 100%; height: auto;"></video>
+          <canvas ref="canvas" width="640" height="480" v-show="photo" style="max-width: 100%; height: auto;"></canvas>
         </div>
 
         <div class="center-buttons" v-if="!photo">
@@ -229,12 +203,12 @@
         </div>
       </div>
     </div>
-
-    <!-- Loading indicator -->
-    <div class="loading" v-if="isLoading">
+    
+    <!-- Add loading indicator -->
+    <div class="loading" v-if="isLoading" style="display: none;">
       <div class="loading-content">
         <div class="spinner"></div>
-        <div>[[ loadingMessage ]]</div>
+        <div>処理中...</div>
       </div>
     </div>
   </div>
@@ -275,85 +249,39 @@
         lastFrameData: null,
         stillStartTime: null,
         detectionCooldown: false,
-        isLoading: false,
-        loadingMessage: '処理中...',
-        facingMode: 'environment', // Default to rear camera
-        hasMultipleCameras: false,
-        availableCameras: [],
-        currentCameraIndex: 0,
-        canvasWidth: 640,
-        canvasHeight: 480
+        isLoading: false
       },
       methods: {
-        async checkAvailableCameras() {
-          try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            this.availableCameras = devices.filter(device => device.kind === 'videoinput');
-            this.hasMultipleCameras = this.availableCameras.length > 1;
-          } catch (error) {
-            console.error("カメラ情報の取得エラー:", error);
-          }
-        },
-        async switchCamera() {
-          if (this.stream) {
-            this.stopCamera();
-          }
+        startCamera() {
+          // Use environment camera (rear camera) on mobile by default
+          const constraints = { 
+            video: { 
+              facingMode: 'environment',
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            } 
+          };
           
-          this.currentCameraIndex = (this.currentCameraIndex + 1) % this.availableCameras.length;
-          const cameraId = this.availableCameras[this.currentCameraIndex].deviceId;
-          
-          await this.startCamera({
-            video: {
-              deviceId: { exact: cameraId }
-            }
-          });
-        },
-        async startCamera(constraints = null) {
-          this.isLoading = true;
-          this.loadingMessage = 'カメラ起動中...';
-          
-          try {
-            const defaultConstraints = {
-              video: {
-                facingMode: this.facingMode,
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-              }
-            };
-            
-            const streamConstraints = constraints || defaultConstraints;
-            this.stream = await navigator.mediaDevices.getUserMedia(streamConstraints);
-            
-            const video = this.$refs.video;
-            video.srcObject = this.stream;
-            
-            // Set canvas dimensions based on video track
-            const track = this.stream.getVideoTracks()[0];
-            const settings = track.getSettings();
-            
-            // Update canvas dimensions
-            const canvas = this.$refs.canvas;
-            this.canvasWidth = settings.width || 640;
-            this.canvasHeight = settings.height || 480;
-            canvas.width = this.canvasWidth;
-            canvas.height = this.canvasHeight;
-            
-            // Wait for video to be ready
-            await new Promise(resolve => {
-              video.onloadedmetadata = () => {
-                video.play();
-                resolve();
-              };
+          navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+              this.stream = stream;
+              this.$refs.video.srcObject = stream;
+              this.setupAutoDetection();
+            })
+            .catch(error => {
+              console.error("カメラ起動エラー:", error);
+              // Fallback to any available camera
+              navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                  this.stream = stream;
+                  this.$refs.video.srcObject = stream;
+                  this.setupAutoDetection();
+                })
+                .catch(error => {
+                  console.error("カメラ起動エラー (フォールバック):", error);
+                  alert("カメラの起動に失敗しました。カメラへのアクセス許可を確認してください。");
+                });
             });
-            
-            this.setupAutoDetection();
-            await this.checkAvailableCameras();
-          } catch (error) {
-            console.error("カメラ起動エラー:", error);
-            alert("カメラの起動に失敗しました。カメラへのアクセス許可を確認してください。");
-          } finally {
-            this.isLoading = false;
-          }
         },
         stopCamera() {
           if (this.stream) {
@@ -365,10 +293,6 @@
           const canvas = this.$refs.canvas;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(this.$refs.video, 0, 0, canvas.width, canvas.height);
-          
-          this.isLoading = true;
-          this.loadingMessage = '画像処理中...';
-          
           canvas.toBlob(blob => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -377,12 +301,14 @@
               this.sendToFlask(this.photo);
             };
             reader.readAsDataURL(blob);
-          }, 'image/jpeg', 0.9);
+          }, 'image/png');
         },
         sendToFlask(base64data) {
           const username = localStorage.getItem('username') || null;
+          
+          // Show loading indicator
           this.isLoading = true;
-          this.loadingMessage = '物体検出中...';
+          document.querySelector('.loading').style.display = 'flex';
           
           fetch('/api/photo-analyze', {
             method: 'POST',
@@ -391,7 +317,10 @@
           })
             .then(res => res.json())
             .then(data => {
+              // Hide loading indicator
               this.isLoading = false;
+              document.querySelector('.loading').style.display = 'none';
+              
               if (data.success) {
                 this.objects = data.objects;
                 this.drawBoundingBoxes(this.objects);
@@ -401,9 +330,11 @@
               }
             })
             .catch(err => {
+              // Hide loading indicator
               this.isLoading = false;
+              document.querySelector('.loading').style.display = 'none';
+              
               console.error("Flaskとの通信エラー:", err);
-              alert("サーバーとの通信に失敗しました。もう一度お試しください。");
             });
         },
         drawBoundingBoxes(objects) {
@@ -434,8 +365,9 @@
           img.src = this.photo;
         },
         async translateLabels() {
+          // Show loading indicator
           this.isLoading = true;
-          this.loadingMessage = '翻訳中...';
+          document.querySelector('.loading').style.display = 'flex';
           
           try {
             const translations = await Promise.all(this.objects.map(async obj => {
@@ -454,7 +386,9 @@
             }));
             this.translatedObjects = translations;
           } finally {
+            // Hide loading indicator
             this.isLoading = false;
+            document.querySelector('.loading').style.display = 'none';
           }
         },
         setupAutoDetection() {
@@ -462,63 +396,54 @@
           const ctx = canvas.getContext('2d');
           const video = this.$refs.video;
 
-          const detectInterval = setInterval(() => {
-            if (!this.stream || this.photo) {
-              clearInterval(detectInterval);
-              return;
-            }
-            
-            try {
-              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-              const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          setInterval(() => {
+            if (!this.stream) return;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-              if (this.lastFrameData) {
-                const diff = this.calculateFrameDifference(this.lastFrameData.data, currentFrame.data);
-                const threshold = 0.02;
-                const isStill = diff < threshold;
+            if (this.lastFrameData) {
+              const diff = this.calculateFrameDifference(this.lastFrameData.data, currentFrame.data);
+              const threshold = 0.02;
+              const isStill = diff < threshold;
 
-                if (isStill && !this.detectionCooldown) {
-                  if (!this.stillStartTime) {
-                    this.stillStartTime = Date.now();
-                  } else if (Date.now() - this.stillStartTime > 1000) {
-                    canvas.toBlob(blob => {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        this.photo = reader.result;
-                        this.stopCamera();
-                        this.sendToFlask(this.photo);
-                      };
-                      reader.readAsDataURL(blob);
-                    }, 'image/jpeg', 0.9);
+              if (isStill && !this.detectionCooldown && !this.photo) {
+                if (!this.stillStartTime) {
+                  this.stillStartTime = Date.now();
+                } else if (Date.now() - this.stillStartTime > 1000) {
+                  canvas.toBlob(blob => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      this.photo = reader.result;
+                      this.stopCamera();
+                      this.sendToFlask(this.photo);
+                    };
+                    reader.readAsDataURL(blob);
+                  }, 'image/jpeg');
 
-                    this.detectionCooldown = true;
-                    setTimeout(() => {
-                      this.detectionCooldown = false;
-                    }, 3000);
-                  }
-                } else {
-                  this.stillStartTime = null;
+                  this.detectionCooldown = true;
+                  setTimeout(() => {
+                    this.detectionCooldown = false;
+                  }, 3000);
                 }
+              } else {
+                this.stillStartTime = null;
               }
-
-              this.lastFrameData = currentFrame;
-            } catch (e) {
-              console.error("Auto detection error:", e);
             }
+
+            this.lastFrameData = currentFrame;
           }, 200);
         },
         calculateFrameDifference(data1, data2) {
           let diffPixels = 0;
-          const sampleSize = Math.floor(data1.length / 40); // Sample only a portion for performance
-          
-          for (let i = 0; i < data1.length; i += 40) {
+          // Sample only a subset of pixels for better performance on mobile
+          const step = 16; // Check every 16th pixel instead of every pixel
+          for (let i = 0; i < data1.length; i += step * 4) {
             const rDiff = Math.abs(data1[i] - data2[i]);
             const gDiff = Math.abs(data1[i + 1] - data2[i + 1]);
             const bDiff = Math.abs(data1[i + 2] - data2[i + 2]);
             if (rDiff + gDiff + bDiff > 30) diffPixels++;
           }
-          
-          return diffPixels / (data1.length / 40 / 4);
+          return diffPixels / (data1.length / step / 4);
         },
         retakePhoto() {
           this.photo = '';
@@ -538,25 +463,21 @@
           }
         }
       },
-      async mounted() {
-        // Check if device orientation is supported and add listener
-        if (window.DeviceOrientationEvent) {
-          window.addEventListener('orientationchange', () => {
-            // Give time for the orientation change to complete
-            setTimeout(() => {
-              if (!this.photo) {
-                this.stopCamera();
-                this.startCamera();
-              }
-            }, 500);
-          });
-        }
+      mounted() {
+        this.startCamera();
         
         // Handle page visibility changes (switching apps, etc.)
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
         
-        // Initialize camera
-        await this.startCamera();
+        // Handle orientation changes
+        window.addEventListener('orientationchange', () => {
+          setTimeout(() => {
+            if (!this.photo) {
+              this.stopCamera();
+              this.startCamera();
+            }
+          }, 500);
+        });
       },
       beforeDestroy() {
         this.stopCamera();
