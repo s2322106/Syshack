@@ -8,14 +8,13 @@ from datetime import datetime
 from google.cloud import vision
 import requests
 from flask import request
+from google.cloud import translate_v2 as translate
 
 app = Flask(__name__, static_folder='static')
 
-# Google Vision API 설정
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(BASE_DIR, "vision_key.json")
 
-# 파일 경로 설정
 PHOTO_SAVE_DIR = 'static/photos'
 PHOTO_RESULTS_PATH = 'photo_results.json'
 
@@ -34,77 +33,38 @@ PHOTO_RESULTS_PATH = os.path.join(BASE_DIR, 'photo_results.json')
 
 USERS_JSON_PATH = os.path.join(BASE_DIR, 'users.json')
 
-# 퀴즈 결과 저장 경로
+# ※ 以下3つのJSONファイルは、レベルごとにクイズ結果を格納するために用意したもの
 LEVEL1_RESULTS_JSON_PATH = os.path.join(BASE_DIR, 'level1_results.json')
 LEVEL2_RESULTS_JSON_PATH = os.path.join(BASE_DIR, 'level2_results.json')
 LEVEL3_RESULTS_JSON_PATH = os.path.join(BASE_DIR, 'level3_results.json')
 
-# 퀴즈 데이터 경로
 LEVEL1_QUIZ_PATH = os.path.join(STATIC_DIR, 'level1_quiz_full_50.json')
 LEVEL2_QUIZ_PATH = os.path.join(STATIC_DIR, 'level2_quiz_full_50.json')
 LEVEL3_QUIZ_PATH = os.path.join(STATIC_DIR, 'level3_quiz_full_50.json')
 
-# 디렉토리 생성
 os.makedirs(PHOTO_SAVE_DIR, exist_ok=True)
 
-# 간단한 번역 사전 (영어↔일본어)
-TRANSLATION_DICT = {
-    # General dictionary
-    "Quiz": "クイズ",
-    "Loading...": "読み込み中...",
-    "Select Level": "レベルを選択してください",
-    "Level 1": "レベル 1",
-    "Level 2": "レベル 2", 
-    "Level 3": "レベル 3",
-    "Continuous Mode: Keep playing until you make a mistake!": "連続モード: 間違えるまで挑戦できます！",
-    "Score": "スコア",
-    "Correct!": "正解です！",
-    "Sorry! Incorrect answer": "残念！不正解です",
-    "Next Question": "次の問題",
-    "Finish": "終了する",
-    "Quiz Complete": "クイズ終了",
-    "Final Score": "最終スコア",
-    "Try Again": "もう一度",
-    "Congratulations! All answers correct!": "おめでとう！全問正解です！",
-    "Correct answer:": "正解:",
-    "Camera": "カメラ",
-    "Menu": "メニュー",
-    
-    # Common quiz questions and answers
-    "What is Japan's traditional paper?": "日本の伝統的な紙は？",
-    "Copy paper": "コピー用紙",
-    "Washi": "和紙",
-    "Newspaper": "新聞紙",
-    "Tissue paper": "障子紙",
-    
-    "What do children typically receive during New Year in Japan?": "お正月に子どもがもらうおこづかいは？",
-    "Otoshidama": "お年玉",
-    "Bonus": "ボーナス",
-    "Pocket money": "おこづかい",
-    "Money offering": "お祝い金",
-    
-    "What is the traditional Japanese folding art?": "折り紙でよく作る動物は？",
-    "Dog": "犬",
-    "Cat": "猫",
-    "Crane": "鶴",
-    "Fish": "魚",
-    
-    # Add more translations as needed
-}
-
-# 영어를 일본어로 번역
-def translate_to_japanese(english_text):
-    if english_text in TRANSLATION_DICT:
-        return TRANSLATION_DICT[english_text]
-    return english_text
-
-# 일본어를 영어로 번역
-def translate_to_english(japanese_text):
-    # 역방향 사전 생성
-    reverse_dict = {v: k for k, v in TRANSLATION_DICT.items()}
-    if japanese_text in reverse_dict:
-        return reverse_dict[japanese_text]
-    return japanese_text
+# Google Translate 함수
+def translate_to_japanese(english_name):
+    try:
+        # 일부 자주 사용되는 단어는 정적 사전으로 처리
+        dictionary = {
+            "Bottle": "ボトル",
+            "Chair": "椅子",
+            "Table": "テーブル",
+            "Book": "本"
+        }
+        
+        if english_name in dictionary:
+            return dictionary[english_name]
+        
+        # 사전에 없는 단어는 Google Translate API 사용
+        client = translate.Client()
+        result = client.translate(english_name, target_language='ja')
+        return result['translatedText']
+    except Exception as e:
+        print(f"翻訳エラー: {e}")
+        return english_name + "（翻訳失敗）"
 
 ################################
 # JSON 파일 읽기/쓰기
@@ -202,6 +162,29 @@ def load_quiz_data(level):
     except Exception as e:
         print(f"Error loading quiz data for level {level}: {e}")
         return {"quiz": []}
+
+
+################################
+# Google Translate API 활용
+################################
+
+@app.route('/api/google-translate', methods=['POST'])
+def google_translate():
+    try:
+        client = translate.Client()
+        
+        data = request.get_json()
+        text = data.get('text', '')
+        target_language = data.get('target_language', 'ja')  # default to Japanese
+        
+        result = client.translate(text, target_language=target_language)
+        translated = result['translatedText']
+        
+        return jsonify({'success': True, 'translated_text': translated})
+    
+    except Exception as e:
+        print(f"翻訳エラー: {e}")
+        return jsonify({'success': False, 'translated_text': '翻訳失敗'})
 
 
 ################################
@@ -390,12 +373,23 @@ def get_quiz_questions(level):
             
             # Translate if language is English
             if lang == 'en':
-                # Try to translate the question and options using our dictionary
-                question_text = translate_to_english(question_text)
-                translated_options = []
-                for option in option_texts:
-                    translated_options.append(translate_to_english(option))
-                option_texts = translated_options
+                try:
+                    client = translate.Client()
+                    
+                    # Translate question
+                    translated_question = client.translate(question_text, target_language='en')
+                    question_text = translated_question['translatedText']
+                    
+                    # Translate options
+                    translated_options = []
+                    for option in option_texts:
+                        translated = client.translate(option, target_language='en')
+                        translated_options.append(translated['translatedText'])
+                    option_texts = translated_options
+                    
+                except Exception as e:
+                    print(f"Translation error: {e}")
+                    # Fall back to original text if translation fails
             
             formatted_questions.append({
                 'question': question_text,
@@ -565,7 +559,7 @@ def camera_history1():
         with open(PHOTO_RESULTS_PATH, 'r', encoding='utf-8') as f:
             raw_data = json.load(f)
 
-        # 번역 적용 및 날짜 정렬
+        # Google 번역 적용 및 날짜 정렬
         for item in raw_data:
             item['image_url'] = '/static/photos/' + item['filename']
 
@@ -779,8 +773,6 @@ def get_user_profile():
         return jsonify({'success': False, 'message': 'ユーザーが見つかりません'})
     except FileNotFoundError:
         return jsonify({'success': False, 'message': 'ユーザーファイルが存在しません'})
-    except FileNotFoundError:
-        return jsonify({'success': False, 'message': 'ユーザーファイルが存在しません'})
 
 
 
@@ -932,30 +924,6 @@ def serve_static(path):
 
 
 ################################
-# API: 간단한 번역 API - 외부 API 대신
-################################
-
-@app.route('/api/translate', methods=['POST'])
-def translate_api():
-    data = request.get_json()
-    text = data.get('text', '')
-    target_language = data.get('target_language', 'ja')  # default to Japanese
-    
-    if not text:
-        return jsonify({'success': False, 'message': '翻訳テキストがありません'})
-    
-    try:
-        if target_language == 'ja':
-            translated_text = translate_to_japanese(text)
-        else:
-            translated_text = translate_to_english(text)
-        
-        return jsonify({'success': True, 'translated_text': translated_text})
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'翻訳エラー: {str(e)}'})
-
-
-################################
 # メイン
 ################################
 
@@ -969,4 +937,4 @@ if __name__ == '__main__':
         elif level == 3 and not os.path.exists(LEVEL3_RESULTS_JSON_PATH):
             save_results_by_level(3, [])
     
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5001, ssl_context=('cert.pem', 'key.pem'), debug=True)
