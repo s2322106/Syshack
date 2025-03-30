@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>カメラ撮影</title>
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <style>
@@ -12,6 +12,7 @@
       padding: 0;
       font-family: Arial, sans-serif;
       background-color: #808080 !important; /* Gray background to match quiz page */
+      overscroll-behavior: none; /* Prevent overscroll effects */
     }
     body {
       display: flex;
@@ -76,6 +77,7 @@
       font-weight: bold;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       transition: all 0.3s ease;
+      -webkit-tap-highlight-color: transparent;
     }
     
     .button:hover {
@@ -88,6 +90,7 @@
       border-radius: 10px;
       border: 2px solid rgba(128, 128, 128, 0.6);
       max-width: 100%;
+      height: auto;
     }
     
     .center-buttons {
@@ -184,6 +187,70 @@
       position: relative;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
+
+    /* Camera Controls */
+    .camera-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .camera-switch {
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .camera-switch:hover {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    /* Loading indicator */
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+    }
+    .loading-content {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #808080;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -200,6 +267,14 @@
         <div class="menu-option">
           <video ref="video" v-show="!photo" autoplay playsinline muted width="640" height="480"></video>
           <canvas ref="canvas" width="640" height="480" v-show="photo"></canvas>
+          
+          <!-- Camera Controls -->
+          <div class="camera-controls" v-if="!photo && hasMultipleCameras">
+            <button class="camera-switch" @click="switchCamera">
+              <span v-if="facingMode === 'environment'">📱</span>
+              <span v-else>📷</span>
+            </button>
+          </div>
         </div>
 
         <div class="center-buttons" v-if="!photo">
@@ -217,6 +292,14 @@
             </li>
           </ul>
         </div>
+      </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div class="loading" v-if="isLoading">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <div>[[ loadingMessage ]]</div>
       </div>
     </div>
 
@@ -258,17 +341,89 @@
         translatedObjects: [],
         lastFrameData: null,
         stillStartTime: null,
-        detectionCooldown: false
+        detectionCooldown: false,
+        facingMode: 'environment', // 'environment' for back camera, 'user' for front camera
+        hasMultipleCameras: false,
+        availableCameras: [],
+        currentCameraIndex: 0,
+        isLoading: false,
+        loadingMessage: '処理中...'
       },
       methods: {
-        startCamera() {
-          navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-              this.stream = stream;
-              this.$refs.video.srcObject = stream;
-              this.setupAutoDetection();
-            })
-            .catch(error => console.error("カメラ起動エラー:", error));
+        async checkAvailableCameras() {
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            this.availableCameras = devices.filter(device => device.kind === 'videoinput');
+            this.hasMultipleCameras = this.availableCameras.length > 1;
+            console.log('Available cameras:', this.availableCameras.length);
+          } catch (error) {
+            console.error("カメラ情報の取得エラー:", error);
+          }
+        },
+        async switchCamera() {
+          this.isLoading = true;
+          this.loadingMessage = 'カメラ切替中...';
+          
+          try {
+            // Stop current stream
+            this.stopCamera();
+            
+            // Toggle facing mode
+            this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
+            
+            // Start new camera with updated facing mode
+            await this.startCamera();
+          } catch (error) {
+            console.error("カメラ切替エラー:", error);
+            alert("カメラの切替に失敗しました。");
+          } finally {
+            this.isLoading = false;
+          }
+        },
+        async startCamera() {
+          this.isLoading = true;
+          this.loadingMessage = 'カメラ起動中...';
+          
+          try {
+            // Try using facing mode first (this works on most mobile devices)
+            const constraints = { 
+              video: { 
+                facingMode: this.facingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              } 
+            };
+            
+            try {
+              this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (initialError) {
+              console.warn("指定したカメラモードでの起動に失敗しました。汎用モードで再試行します。", initialError);
+              
+              // Fall back to any camera if specific facing mode fails
+              this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            }
+            
+            const video = this.$refs.video;
+            video.srcObject = this.stream;
+            
+            // Wait for video to be loaded
+            await new Promise(resolve => {
+              video.onloadedmetadata = () => {
+                video.play().then(resolve).catch(e => {
+                  console.error("Video play error:", e);
+                  resolve();
+                });
+              };
+            });
+            
+            this.setupAutoDetection();
+            await this.checkAvailableCameras();
+          } catch (error) {
+            console.error("カメラ起動エラー:", error);
+            alert("カメラへのアクセスが許可されていません。設定から許可してください。");
+          } finally {
+            this.isLoading = false;
+          }
         },
         stopCamera() {
           if (this.stream) {
@@ -277,6 +432,9 @@
           }
         },
         capturePhoto() {
+          this.isLoading = true;
+          this.loadingMessage = '画像キャプチャ中...';
+          
           const canvas = this.$refs.canvas;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(this.$refs.video, 0, 0, canvas.width, canvas.height);
@@ -292,6 +450,10 @@
         },
         sendToFlask(base64data) {
           const username = localStorage.getItem('username') || null;
+          
+          this.isLoading = true;
+          this.loadingMessage = '物体検出中...';
+          
           fetch('/api/photo-analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -299,6 +461,8 @@
           })
             .then(res => res.json())
             .then(data => {
+              this.isLoading = false;
+              
               if (data.success) {
                 this.objects = data.objects;
                 this.drawBoundingBoxes(this.objects);
@@ -307,7 +471,11 @@
                 alert("物体検出に失敗しました: " + data.message);
               }
             })
-            .catch(err => console.error("Flaskとの通信エラー:", err));
+            .catch(err => {
+              this.isLoading = false;
+              console.error("Flaskとの通信エラー:", err);
+              alert("サーバーとの通信に失敗しました。");
+            });
         },
         drawBoundingBoxes(objects) {
           const canvas = this.$refs.canvas;
@@ -337,73 +505,90 @@
           img.src = this.photo;
         },
         async translateLabels() {
-          const translations = await Promise.all(this.objects.map(async obj => {
-            try {
-              const res = await fetch("/api/google-translate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: obj.name })
-              });
-              const data = await res.json();
-              return { en: obj.name, jp: data.translated_text || "翻訳失敗" };
-            } catch (err) {
-              console.error("翻訳エラー:", err);
-              return { en: obj.name, jp: "翻訳失敗" };
-            }
-          }));
-          this.translatedObjects = translations;
+          this.isLoading = true;
+          this.loadingMessage = '翻訳中...';
+          
+          try {
+            const translations = await Promise.all(this.objects.map(async obj => {
+              try {
+                const res = await fetch("/api/google-translate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ text: obj.name })
+                });
+                const data = await res.json();
+                return { en: obj.name, jp: data.translated_text || "翻訳失敗" };
+              } catch (err) {
+                console.error("翻訳エラー:", err);
+                return { en: obj.name, jp: "翻訳失敗" };
+              }
+            }));
+            this.translatedObjects = translations;
+          } finally {
+            this.isLoading = false;
+          }
         },
         setupAutoDetection() {
           const canvas = this.$refs.canvas;
           const ctx = canvas.getContext('2d');
           const video = this.$refs.video;
 
-          setInterval(() => {
-            if (!this.stream) return;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-            if (this.lastFrameData) {
-              const diff = this.calculateFrameDifference(this.lastFrameData.data, currentFrame.data);
-              const threshold = 0.02;
-              const isStill = diff < threshold;
-
-              if (isStill && !this.detectionCooldown && !this.photo) {
-                if (!this.stillStartTime) {
-                  this.stillStartTime = Date.now();
-                } else if (Date.now() - this.stillStartTime > 1000) {
-                  canvas.toBlob(blob => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      this.photo = reader.result;
-                      this.stopCamera();
-                      this.sendToFlask(this.photo);
-                    };
-                    reader.readAsDataURL(blob);
-                  }, 'image/jpeg');
-
-                  this.detectionCooldown = true;
-                  setTimeout(() => {
-                    this.detectionCooldown = false;
-                  }, 3000);
-                }
-              } else {
-                this.stillStartTime = null;
-              }
+          const detectInterval = setInterval(() => {
+            if (!this.stream || this.photo) {
+              clearInterval(detectInterval);
+              return;
             }
+            
+            try {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-            this.lastFrameData = currentFrame;
+              if (this.lastFrameData) {
+                const diff = this.calculateFrameDifference(this.lastFrameData.data, currentFrame.data);
+                const threshold = 0.02;
+                const isStill = diff < threshold;
+
+                if (isStill && !this.detectionCooldown && !this.photo) {
+                  if (!this.stillStartTime) {
+                    this.stillStartTime = Date.now();
+                  } else if (Date.now() - this.stillStartTime > 1000) {
+                    canvas.toBlob(blob => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        this.photo = reader.result;
+                        this.stopCamera();
+                        this.sendToFlask(this.photo);
+                      };
+                      reader.readAsDataURL(blob);
+                    }, 'image/jpeg');
+
+                    this.detectionCooldown = true;
+                    setTimeout(() => {
+                      this.detectionCooldown = false;
+                    }, 3000);
+                  }
+                } else {
+                  this.stillStartTime = null;
+                }
+              }
+
+              this.lastFrameData = currentFrame;
+            } catch (e) {
+              console.error("Auto detection error:", e);
+            }
           }, 200);
         },
         calculateFrameDifference(data1, data2) {
           let diffPixels = 0;
-          for (let i = 0; i < data1.length; i += 4) {
+          // Sample only a portion of pixels for better performance on mobile
+          const step = 16; // Check every 16th pixel
+          for (let i = 0; i < data1.length; i += step * 4) {
             const rDiff = Math.abs(data1[i] - data2[i]);
             const gDiff = Math.abs(data1[i + 1] - data2[i + 1]);
             const bDiff = Math.abs(data1[i + 2] - data2[i + 2]);
             if (rDiff + gDiff + bDiff > 30) diffPixels++;
           }
-          return diffPixels / (data1.length / 4);
+          return diffPixels / (data1.length / step / 4);
         },
         retakePhoto() {
           this.photo = '';
@@ -414,13 +599,43 @@
         },
         goToMain() {
           window.location.href = "/quiz.html";
+        },
+        handleVisibilityChange() {
+          if (document.hidden) {
+            this.stopCamera();
+          } else if (!this.photo) {
+            this.startCamera();
+          }
         }
       },
-      mounted() {
-        this.startCamera();
+      async mounted() {
+        // Check if the user is logged in
+        const username = localStorage.getItem('username');
+        if (!username) {
+          alert("ログインしてください");
+          window.location.href = "index.html";
+          return;
+        }
+        
+        // Handle page visibility (switching apps, etc.)
+        document.addEventListener('visibilitychange', this.handleVisibilityChange);
+        
+        // Handle orientation changes
+        window.addEventListener('orientationchange', () => {
+          setTimeout(() => {
+            if (!this.photo) {
+              this.stopCamera();
+              this.startCamera();
+            }
+          }, 500);
+        });
+        
+        // Start camera
+        await this.startCamera();
       },
       beforeDestroy() {
         this.stopCamera();
+        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
       }
     });
   </script>
