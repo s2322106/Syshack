@@ -199,10 +199,6 @@ def index():
 def index_html():
     return render_template('index.html')
 
-@app.route('/main.html')
-def main():
-    return render_template('main.html')
-
 @app.route('/quiz.html')
 def quiz():
     return render_template('quiz.html')
@@ -529,62 +525,6 @@ def show_level1_ranking():
     # テンプレートへ渡す
     return render_template("level1.html", results=best_list)
 
-@app.route('/camera_history.html')
-def camera_history2():
-    try:
-        photo_folder = os.path.join(app.static_folder, 'photos')
-        photo_files = []
-
-        # static/photos 以下の画像ファイル一覧取得（拡張子 jpg/png/jpeg 限定）
-        for filename in os.listdir(photo_folder):
-            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-                photo_files.append({
-                    'image_url': '/static/photos/' + filename,
-                    'filename': filename
-                })
-
-        # ファイル名で降順ソート（新しい順）
-        photo_files.sort(key=lambda x: x['filename'], reverse=True)
-
-        return render_template('camera_history.html', camera_history=photo_files)
-
-    except Exception as e:
-        print("写真読み込みエラー:", e)
-        return render_template('camera_history.html', camera_history=[])
-
-
-@app.route('/camera_history.html')
-def camera_history1():
-    try:
-        with open(PHOTO_RESULTS_PATH, 'r', encoding='utf-8') as f:
-            raw_data = json.load(f)
-
-        # Google 번역 적용 및 날짜 정렬
-        for item in raw_data:
-            item['image_url'] = '/static/photos/' + item['filename']
-
-            # 객체 이름 목록 추출
-            object_names = [obj['name'] for obj in item.get('objects', [])]
-            item['objects'] = object_names
-
-            # 번역된 이름 리스트 생성
-            item['translated_objects'] = [translate_to_japanese(name) for name in object_names]
-
-            # 날짜 파싱 (없으면 현재시간)
-            try:
-                item['timestamp_obj'] = datetime.fromisoformat(item['timestamp'])
-            except:
-                item['timestamp_obj'] = datetime.now()
-
-        # 최신순 정렬
-        sorted_data = sorted(raw_data, key=lambda x: x['timestamp_obj'], reverse=True)
-
-        return render_template('camera_history.html', camera_history=sorted_data)
-
-    except Exception as e:
-        print("履歴ロードエラー:", e)
-        return render_template('camera_history.html', camera_history=[])
-
 @app.route('/api/photo-history/<username>', methods=['GET'])
 def photo_history_by_user(username):
     try:
@@ -601,30 +541,6 @@ def photo_history_by_user(username):
     except Exception as e:
         return jsonify({'success': False, 'message': str(e), 'photos': []})
 
-
-@app.route('/camera_history.html')
-def camera_history3():
-    try:
-        with open(PHOTO_RESULTS_PATH, 'r', encoding='utf-8') as f:
-            raw_data = json.load(f)
-
-        for item in raw_data:
-            item['image_url'] = '/static/photos/' + item['filename']
-            object_names = [obj['name'] for obj in item.get('objects', [])] if 'objects' in item else [item['en']]
-            item['objects'] = object_names
-            item['translated_objects'] = [translate_to_japanese(name) for name in object_names]
-            try:
-                item['timestamp_obj'] = datetime.fromisoformat(item['timestamp'])
-            except:
-                item['timestamp_obj'] = datetime.now()
-
-        sorted_data = sorted(raw_data, key=lambda x: x['timestamp_obj'], reverse=True)
-
-        return render_template('camera_history.html', camera_history=sorted_data)
-
-    except Exception as e:
-        print("履歴ロードエラー:", e)
-        return render_template('camera_history.html', camera_history=[])
 
 # (2) レベル2ボタン用のルート
 #     /ranking/2 でアクセス
